@@ -2,7 +2,8 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/mivet/favicon.svg" />
+    <link rel="icon" type="image/jpeg" href="/mivet/logo/mivet-logo.jpg" />
+    <link rel="apple-touch-icon" href="/mivet/logo/mivet-logo.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>MiVet — Juegos</title>
     <meta property="og:type" content="website" />
@@ -944,6 +945,16 @@
       .stage-overlay { overflow-y: auto; }
       .start-card { margin: auto; }
 
+      /* Celulares bajos: tarjeta de inicio más compacta para que entre todo */
+      @media (max-height: 700px) {
+        .start-card { gap: 0.55rem; padding: 1.1rem 1rem; }
+        .start-card h2 { font-size: 1.2rem; }
+        .start-rules { font-size: 0.8rem !important; line-height: 1.35; }
+        .start-record { font-size: 0.78rem; padding: 0.25rem 0.7rem; }
+        .start-card .btn { padding: 0.75rem 1.2rem; font-size: 1rem; }
+        .start-card .pill { padding: 0.4rem 0.8rem; }
+      }
+
       .hurt-flash {
         position: absolute;
         inset: 0;
@@ -995,6 +1006,89 @@
 
       .modal-record.is-new { background: #fff1d6; border: 1px solid var(--mv-accent); font-family: var(--font-heading); }
 
+      /* ---------- Marca ---------- */
+      .mv-brand { display: inline-flex; align-items: center; gap: 0.5rem; }
+
+      .mv-brand img {
+        width: 2.1rem;
+        height: 2.1rem;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.18);
+      }
+
+      /* Mismo tratamiento que el logo del hero: redondo y con sombra */
+      .menu-logo {
+        display: block;
+        width: 5.5rem;
+        height: 5.5rem;
+        margin: 0 auto 1.1rem;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+      }
+
+      @media (min-width: 768px) {
+        .menu-logo { width: 7rem; height: 7rem; }
+      }
+
+      .mv-menu { min-height: 100%; display: flex; flex-direction: column; }
+
+      .mv-credit {
+        margin: auto 0 0;
+        padding-top: 2.5rem;
+        font-size: 0.72rem;
+        color: var(--mv-muted);
+        text-align: center;
+        opacity: 0.85;
+      }
+
+      /* ---------- Compartir ---------- */
+      .btn-sm { padding: 0.7rem 1.2rem; font-size: 0.98rem; }
+
+      .link-btn {
+        padding: 0.3rem 0.6rem;
+        border: none;
+        background: none;
+        font-family: var(--font-heading);
+        font-size: 0.9rem;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        cursor: pointer;
+      }
+
+      .link-btn:focus-visible { outline: 2px solid var(--mv-ink); outline-offset: 2px; border-radius: 6px; }
+
+      .modal { overflow-y: auto; }
+      .modal-card { margin: auto; }
+
+      .share-modal { z-index: 65; }
+
+      .share-card { max-width: 26rem; }
+
+      #share-preview {
+        display: block;
+        width: 100%;
+        max-height: 46vh;
+        object-fit: contain;
+        border-radius: 1rem;
+        border: 1px solid var(--mv-line);
+        background: var(--mv-bg);
+      }
+
+      .share-actions {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        width: 100%;
+      }
+
+      .share-actions .btn { width: 100%; padding-left: 0.4rem; padding-right: 0.4rem; }
+      .share-actions #share-native,
+      .share-actions #share-download { grid-column: 1 / -1; }
+
+      .share-note { font-size: 0.8rem; }
+
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after {
           animation-duration: 0.01ms !important;
@@ -1006,7 +1100,7 @@
   <body>
     <header class="mv-topbar">
       <a class="mv-back" id="topbar-back" href="/mivet/turnos.html">Volver</a>
-      <span class="mv-logo">mivet <span>juegos</span></span>
+      <span class="mv-logo mv-brand"><img id="brand-logo" src="/mivet/logo/mivet-logo.jpg" alt="MiVet Veterinaria" width="34" height="34" decoding="async" />mivet <span>juegos</span></span>
       <div class="mv-topbar-end">
         <button class="mv-icon-btn" id="sound-btn" type="button" aria-label="Silenciar sonido" aria-pressed="true">
           <svg id="sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1024,7 +1118,8 @@
     <main>
       <!-- ================= MENÚ ================= -->
       <section class="view" id="view-menu">
-        <div class="mv-container">
+        <div class="mv-container mv-menu">
+          <img class="menu-logo" src="/mivet/logo/mivet-logo.jpg" alt="MiVet Veterinaria" width="112" height="112" decoding="async" />
           <span class="mv-kicker">Sala de espera</span>
           <h1 class="mv-heading">¿A qué jugamos?</h1>
           <p class="mv-subheading">Tres juegos cortitos para pasar el rato mientras esperás tu turno.</p>
@@ -1060,6 +1155,8 @@
               <span class="game-card-cta">Jugar →</span>
             </a>
           </div>
+
+          <p class="mv-credit">Creado por Facundo Torres</p>
         </div>
       </section>
 
@@ -1208,6 +1305,7 @@
                 </div>
                 <span class="start-record" id="bano-record"></span>
                 <button type="button" class="btn" id="bano-play">¡A bañar!</button>
+                <button type="button" class="link-btn" id="bano-share" hidden>📣 Compartir mi récord</button>
               </div>
             </div>
           </div>
@@ -1281,6 +1379,7 @@
                 <p class="start-rules" id="premios-rules"></p>
                 <span class="start-record" id="premios-record"></span>
                 <button type="button" class="btn" id="premios-play">¡Empezar!</button>
+                <button type="button" class="link-btn" id="premios-share" hidden>📣 Compartir mi récord</button>
               </div>
             </div>
           </div>
@@ -1305,8 +1404,26 @@
         <div class="modal-records" id="modal-records"></div>
         <div class="modal-actions">
           <button type="button" class="btn" id="modal-retry">Jugar de nuevo</button>
-          <a class="btn btn-ghost" href="#" id="modal-menu">Otros juegos</a>
+          <button type="button" class="btn btn-ghost btn-sm" id="modal-share" hidden>📣 Compartir mi récord</button>
+          <a class="btn btn-ghost btn-sm" href="#" id="modal-menu">Otros juegos</a>
         </div>
+      </div>
+    </div>
+
+    <!-- ================= PANEL PARA COMPARTIR LA PLACA ================= -->
+    <div class="modal share-modal" id="share-modal" hidden role="dialog" aria-modal="true" aria-labelledby="share-title">
+      <div class="modal-card share-card">
+        <h2 id="share-title">Compartí tu récord</h2>
+        <img id="share-preview" alt="Placa con tu récord en MiVet" />
+        <div class="share-actions">
+          <button type="button" class="btn" id="share-native" hidden>Compartir…</button>
+          <a class="btn btn-ghost btn-sm" id="share-download" download="mivet-record.png">⬇️ Descargar imagen</a>
+          <a class="btn btn-ghost btn-sm" id="share-wa" target="_blank" rel="noopener">WhatsApp</a>
+          <a class="btn btn-ghost btn-sm" id="share-fb" target="_blank" rel="noopener">Facebook</a>
+          <a class="btn btn-ghost btn-sm" id="share-x" target="_blank" rel="noopener">X</a>
+        </div>
+        <p class="share-note">Para Instagram o TikTok, descargá la imagen y subila desde tu galería.</p>
+        <button type="button" class="btn btn-ghost btn-sm" id="share-close">Cerrar</button>
       </div>
     </div>
 
@@ -1510,6 +1627,7 @@
 
           if (currentView && games[currentView] && games[currentView].stop) games[currentView].stop();
           $("modal").hidden = true;
+          closeShare();
 
           document.querySelectorAll(".view").forEach(function (v) { v.hidden = true; });
           $(key ? "view-" + key : "view-menu").hidden = false;
@@ -1604,6 +1722,14 @@
             box.appendChild(chip);
           });
 
+          // Si ya hay un récord se puede compartir; la placa se prepara ahora
+          // para que el botón responda al instante (en iPhone el menú de
+          // compartir solo abre si el toque no se demora).
+          var canShare = !!(o.key && KEY_INFO[o.key] && getRec(o.key).score > 0);
+          $("modal-share").hidden = !canShare;
+          $("modal-share").onclick = function () { shareRecord(o.key); };
+          if (canShare) buildCard(o.key).catch(function () {});
+
           retryFn = o.retry;
           $("modal-retry").textContent = o.retryLabel || "Jugar de nuevo";
           $("modal").hidden = false;
@@ -1615,6 +1741,269 @@
         $("modal-retry").addEventListener("click", function () {
           $("modal").hidden = true;
           if (retryFn) retryFn();
+        });
+
+        /* ---------------- Placa para compartir el récord ----------------
+           Se dibuja en un canvas (1080x1350, formato vertical que entra bien
+           en feed, historias y WhatsApp) con el logo y los datos de MiVet, y
+           se comparte con el menú nativo del celular. Donde eso no existe
+           (computadora), se abre un panel con vista previa, descarga y
+           enlaces a WhatsApp, Facebook y X. */
+        var SITE_URL = "https://turnosmivet.github.io/mivet/juegos.html";
+        var LOGO_URL = "/mivet/logo/mivet-logo.jpg";
+        var FONT_HEAD = '"HelveticaNowDisplay-Medium", "Helvetica Neue", Arial, sans-serif';
+        var FONT_BODY = '"HelveticaNowDisplayW01-Rg", "Helvetica Neue", Arial, sans-serif';
+        var FONT_EMOJI = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+
+        var KEY_INFO = {
+          "bano-libre": { game: "El baño peludo", icon: "🛁", mode: "Modo Libre" },
+          "bano-60": { game: "El baño peludo", icon: "🛁", mode: "Contrarreloj · 1 min" },
+          "bano-180": { game: "El baño peludo", icon: "🛁", mode: "Contrarreloj · 3 min" },
+          "bano-300": { game: "El baño peludo", icon: "🛁", mode: "Contrarreloj · 5 min" },
+          "premios-libre": { game: "Atrapá el premio", icon: "🦴", mode: "Modo Libre" },
+          "premios-tiempo": { game: "Atrapá el premio", icon: "🦴", mode: "Contrarreloj" },
+          "trivia": { game: "Trivia peluda", icon: "🧠", mode: "Tanda de 20 preguntas" }
+        };
+
+        function loadLogo() {
+          return new Promise(function (resolve) {
+            var img = new Image();
+            img.onload = function () { resolve(img); };
+            img.onerror = function () { resolve(null); };
+            img.src = LOGO_URL;
+          });
+        }
+
+        // Espera a que estén las fuentes de la marca (con tope, por si no cargan).
+        function loadFonts() {
+          if (!document.fonts || !document.fonts.load) return Promise.resolve();
+          return Promise.race([
+            Promise.all([
+              document.fonts.load('500 60px "HelveticaNowDisplay-Medium"'),
+              document.fonts.load('400 30px "HelveticaNowDisplayW01-Rg"')
+            ]),
+            new Promise(function (r) { setTimeout(r, 1500); })
+          ]).catch(function () {});
+        }
+
+        function roundRectPath(ctx, x, y, w, h, r) {
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.arcTo(x + w, y, x + w, y + h, r);
+          ctx.arcTo(x + w, y + h, x, y + h, r);
+          ctx.arcTo(x, y + h, x, y, r);
+          ctx.arcTo(x, y, x + w, y, r);
+          ctx.closePath();
+        }
+
+        function drawPaw(ctx, x, y, size, rot, alpha) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(rot);
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.ellipse(0, size * 0.25, size * 0.5, size * 0.42, 0, 0, Math.PI * 2);
+          ctx.fill();
+          [[-0.58, -0.28], [-0.2, -0.66], [0.2, -0.66], [0.58, -0.28]].forEach(function (t) {
+            ctx.beginPath();
+            ctx.ellipse(t[0] * size, t[1] * size, size * 0.2, size * 0.26, 0, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          ctx.restore();
+        }
+
+        function drawText(ctx, str, x, y, font, color, spacing) {
+          ctx.font = font;
+          ctx.fillStyle = color;
+          if ("letterSpacing" in ctx) ctx.letterSpacing = spacing || "0px";
+          ctx.fillText(str, x, y);
+          if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+        }
+
+        // Achica la fuente hasta que el texto entre en el ancho disponible.
+        function fitFont(ctx, str, maxW, startPx, family) {
+          var px = startPx;
+          ctx.font = "500 " + px + "px " + family;
+          while (ctx.measureText(str).width > maxW && px > 40) {
+            px -= 6;
+            ctx.font = "500 " + px + "px " + family;
+          }
+          return px;
+        }
+
+        function drawCard(key, rec, logo) {
+          var info = KEY_INFO[key];
+          var W = 1080, H = 1350, CX = W / 2;
+          var canvas = document.createElement("canvas");
+          canvas.width = W;
+          canvas.height = H;
+          var ctx = canvas.getContext("2d");
+          ctx.textAlign = "center";
+          ctx.textBaseline = "alphabetic";
+
+          // Fondo cálido con huellitas
+          var bg = ctx.createLinearGradient(0, 0, 0, H);
+          bg.addColorStop(0, "#fdeed6");
+          bg.addColorStop(1, "#e3a052");
+          ctx.fillStyle = bg;
+          ctx.fillRect(0, 0, W, H);
+          [[110, 170, 90, -0.5], [960, 120, 70, 0.4], [70, 700, 80, 0.6], [1010, 640, 90, -0.3],
+           [150, 1240, 100, 0.3], [930, 1230, 84, -0.6], [520, 40, 56, 0.2]].forEach(function (p) {
+            drawPaw(ctx, p[0], p[1], p[2], p[3], 0.22);
+          });
+
+          // Logo redondo (igual que en el hero)
+          var LR = 100, LY = 190;
+          ctx.save();
+          ctx.shadowColor = "rgba(0,0,0,0.25)";
+          ctx.shadowBlur = 36;
+          ctx.shadowOffsetY = 12;
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(CX, LY, LR + 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          if (logo) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(CX, LY, LR, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(logo, CX - LR, LY - LR, LR * 2, LR * 2);
+            ctx.restore();
+          } else {
+            drawText(ctx, "mivet", CX, LY + 14, "500 56px " + FONT_HEAD, "#e3a052");
+          }
+          drawText(ctx, "JUEGOS PARA LA SALA DE ESPERA", CX, 355, "500 30px " + FONT_HEAD, "rgba(26,26,26,0.75)", "3px");
+
+          // Tarjeta blanca central. Sin nivel es más baja y queda centrada.
+          var oy = rec.level ? 0 : 47;
+          var cx0 = 90, cy0 = 395 + oy, cw = 900, ch = 705 - 2 * oy;
+          ctx.save();
+          ctx.shadowColor = "rgba(90,50,0,0.28)";
+          ctx.shadowBlur = 50;
+          ctx.shadowOffsetY = 20;
+          ctx.fillStyle = "#ffffff";
+          roundRectPath(ctx, cx0, cy0, cw, ch, 60);
+          ctx.fill();
+          ctx.restore();
+
+          drawText(ctx, info.icon, CX, 535 + oy, "92px " + FONT_EMOJI, "#000");
+          var namePx = fitFont(ctx, info.game, cw - 120, 68, FONT_HEAD);
+          drawText(ctx, info.game, CX, 625 + oy, "500 " + namePx + "px " + FONT_HEAD, "#1a1a1a");
+          drawText(ctx, info.mode, CX, 675 + oy, "400 32px " + FONT_BODY, "#6b6b6b");
+
+          drawText(ctx, "MI RÉCORD", CX, 755 + oy, "500 30px " + FONT_HEAD, "#b7791f", "6px");
+          var scoreStr = fmt(rec.score);
+          var scorePx = fitFont(ctx, scoreStr, cw - 140, 190, FONT_HEAD);
+          var scoreY = 755 + oy + scorePx * 0.9;
+          drawText(ctx, scoreStr, CX, scoreY, "500 " + scorePx + "px " + FONT_HEAD, "#1a1a1a");
+          var yUnder = scoreY + 52;
+          drawText(ctx, "puntos", CX, yUnder, "400 36px " + FONT_BODY, "#6b6b6b");
+
+          if (rec.level) {
+            var label = "Nivel " + rec.level;
+            ctx.font = "500 40px " + FONT_HEAD;
+            var pw = ctx.measureText(label).width + 90;
+            ctx.fillStyle = "#fff1d6";
+            roundRectPath(ctx, CX - pw / 2, yUnder + 26, pw, 72, 36);
+            ctx.fill();
+            ctx.strokeStyle = "#e3a052";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            drawText(ctx, label, CX, yUnder + 26 + 49, "500 40px " + FONT_HEAD, "#1a1a1a");
+          }
+
+          // Invitación
+          drawText(ctx, "¿Podés superarlo?", CX, 1190, "500 70px " + FONT_HEAD, "#1a1a1a");
+          drawText(ctx, "Jugá gratis en la sala de espera de MiVet", CX, 1241, "400 33px " + FONT_BODY, "rgba(26,26,26,0.85)");
+          drawText(ctx, "turnosmivet.github.io/mivet/juegos.html", CX, 1287, "500 32px " + FONT_HEAD, "#1a1a1a");
+          drawText(ctx, "Creado por Facundo Torres", CX, 1328, "400 24px " + FONT_BODY, "rgba(26,26,26,0.6)", "1px");
+
+          return canvas;
+        }
+
+        var cardCache = { sig: "", promise: null };
+
+        // Devuelve una promesa con el PNG de la placa (se reutiliza si el
+        // récord no cambió, así el botón responde al instante).
+        function buildCard(key) {
+          var rec = getRec(key);
+          var sig = key + "|" + rec.score + "|" + rec.level;
+          if (cardCache.sig === sig && cardCache.promise) return cardCache.promise;
+          cardCache.sig = sig;
+          cardCache.promise = Promise.all([loadLogo(), loadFonts()]).then(function (r) {
+            var canvas = drawCard(key, rec, r[0]);
+            return new Promise(function (resolve, reject) {
+              canvas.toBlob(function (blob) { blob ? resolve(blob) : reject(new Error("toBlob")); }, "image/png");
+            });
+          });
+          cardCache.promise.catch(function () { cardCache.sig = ""; });
+          return cardCache.promise;
+        }
+
+        function shareText(key) {
+          var rec = getRec(key), info = KEY_INFO[key];
+          return "🏆 Mi récord en «" + info.game + "» (" + info.mode + "): " + fmt(rec.score) + " puntos" +
+            (rec.level ? " y nivel " + rec.level : "") + ". ¿Podés superarlo? Jugá gratis en MiVet 🐾";
+        }
+
+        var shareUrl = "";
+
+        function closeShare() {
+          $("share-modal").hidden = true;
+          if (shareUrl) { URL.revokeObjectURL(shareUrl); shareUrl = ""; }
+          $("share-preview").removeAttribute("src");
+        }
+
+        function nativeShareData(key, blob) {
+          var file = new File([blob], "mivet-record.png", { type: "image/png" });
+          return { files: [file], text: shareText(key) + " " + SITE_URL, title: "Mi récord en MiVet" };
+        }
+
+        function canNativeShare(data) {
+          try { return !!(navigator.share && navigator.canShare && navigator.canShare(data)); } catch (e) { return false; }
+        }
+
+        function openShareSheet(key, blob) {
+          if (shareUrl) URL.revokeObjectURL(shareUrl);
+          shareUrl = URL.createObjectURL(blob);
+          var text = shareText(key);
+          $("share-preview").src = shareUrl;
+          $("share-download").href = shareUrl;
+          $("share-wa").href = "https://wa.me/?text=" + encodeURIComponent(text + " " + SITE_URL);
+          $("share-fb").href = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(SITE_URL) + "&quote=" + encodeURIComponent(text);
+          $("share-x").href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(SITE_URL);
+          var data = nativeShareData(key, blob);
+          var native = $("share-native");
+          native.hidden = !canNativeShare(data);
+          native.onclick = function () { navigator.share(data).catch(function () {}); };
+          $("share-modal").hidden = false;
+          $("share-close").focus();
+        }
+
+        var sharing = false;
+
+        function shareRecord(key) {
+          if (sharing || !KEY_INFO[key] || !getRec(key).score) return;
+          sharing = true;
+          buildCard(key).then(function (blob) {
+            var data = nativeShareData(key, blob);
+            if (canNativeShare(data)) {
+              // Menú nativo del celular: la imagen viaja adjunta.
+              return navigator.share(data).catch(function (e) {
+                if (!e || e.name !== "AbortError") openShareSheet(key, blob);
+              });
+            }
+            openShareSheet(key, blob);
+          }).catch(function () {}).then(function () { sharing = false; });
+        }
+
+        $("share-close").addEventListener("click", closeShare);
+        $("share-modal").addEventListener("click", function (e) { if (e.target === this) closeShare(); });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && !$("share-modal").hidden) closeShare();
         });
 
         function floatText(layer, x, y, text, cls) {
@@ -2114,6 +2503,7 @@
             $("bano-durations").hidden = s.mode !== "tiempo";
             $("bano-rules").textContent = RULES[s.mode];
             $("bano-record").textContent = recordLine(recKey());
+            $("bano-share").hidden = !getRec(recKey()).score;
             $("bano-hint").textContent = HINTS[s.mode];
             s.prevBest = getRec(recKey()).score;
             s.recordShown = false;
@@ -2151,6 +2541,7 @@
           });
 
           $("bano-play").addEventListener("click", function () { warmUp(); start(); });
+          $("bano-share").addEventListener("click", function () { shareRecord(recKey()); });
 
           // Si se cambia de pestaña o se bloquea el celular, la partida se
           // pausa (el tiempo y las burbujas no siguen corriendo).
@@ -2734,6 +3125,7 @@
             });
             $("premios-rules").textContent = RULES[s.mode];
             $("premios-record").textContent = recordLine(recKey());
+            $("premios-share").hidden = !getRec(recKey()).score;
             s.prevBest = getRec(recKey()).score;
             s.recordShown = false;
             renderAll();
@@ -2761,6 +3153,7 @@
           });
 
           $("premios-play").addEventListener("click", function () { warmUp(); start(); });
+          $("premios-share").addEventListener("click", function () { shareRecord(recKey()); });
 
           // Si se cambia de pestaña o se bloquea el celular, la partida se
           // pausa y sigue al volver (sin castigar lo que se perdió mientras).
