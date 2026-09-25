@@ -323,7 +323,6 @@
         font-family: var(--font-heading);
         font-size: 1.35rem;
         line-height: 1.2;
-        font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
 
@@ -886,6 +885,116 @@
 
       .modal-actions .btn { width: 100%; }
 
+      /* ---------- Niveles, combo, vidas y modos ---------- */
+      .hud-sub {
+        display: block;
+        min-height: 1em;
+        font-size: 0.68rem;
+        line-height: 1.2;
+        color: var(--mv-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .hud-sub.is-record { color: #b7791f; font-family: var(--font-heading); }
+
+      .progress-row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-shrink: 0;
+        min-height: 1.6rem;
+        padding: 0 0.25rem;
+        font-size: 0.8rem;
+      }
+
+      .progress-label { flex-shrink: 0; white-space: nowrap; color: var(--mv-muted); }
+      .progress-label b { color: var(--mv-ink); font-family: var(--font-heading); font-weight: 500; }
+
+      .progress-row .meter { flex: 1; margin-top: 0; height: 0.6rem; }
+
+      .combo-chip {
+        flex-shrink: 0;
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+        background: #fff1d6;
+        border: 1px solid var(--mv-accent);
+        font-family: var(--font-heading);
+        font-size: 0.85rem;
+        white-space: nowrap;
+      }
+
+      .hud-value.is-lives { font-size: 1.15rem; letter-spacing: -0.05em; }
+
+      .start-rules { font-size: 0.88rem !important; }
+
+      .start-record {
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        background: #fbf3e6;
+        font-size: 0.82rem;
+      }
+
+      .start-card .pill-group { max-width: 100%; }
+
+      .start-card .pill-group.is-modes .pill { padding: 0.55rem 0.9rem; }
+
+      /* Si la tarjeta de inicio no entra (celular en horizontal), se puede scrollear */
+      .stage-overlay { overflow-y: auto; }
+      .start-card { margin: auto; }
+
+      .hurt-flash {
+        position: absolute;
+        inset: 0;
+        z-index: 45;
+        border-radius: inherit;
+        pointer-events: none;
+        box-shadow: inset 0 0 0 3px rgba(212, 81, 61, 0.85), inset 0 0 55px rgba(212, 81, 61, 0.55);
+        animation: hurtFlash 0.45s ease-out forwards;
+      }
+
+      @keyframes hurtFlash { to { opacity: 0; } }
+
+      /* Burbuja de barro: hay que esquivarla */
+      .bubble.is-mud {
+        background:
+          radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.35) 0 10%, rgba(255, 255, 255, 0) 11%),
+          radial-gradient(circle at 50% 50%, rgba(110, 76, 46, 0.85) 0 60%, rgba(70, 46, 26, 0.95) 100%);
+        border: 2px dashed rgba(255, 255, 255, 0.75);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        color: #fff;
+        font-size: calc(var(--label-size, 0.8rem) * 1.3);
+      }
+
+      .modal-stats { display: flex; gap: 0.6rem; width: 100%; }
+
+      .modal-stat {
+        flex: 1;
+        padding: 0.6rem 0.4rem;
+        border-radius: 1rem;
+        background: #fbf3e6;
+      }
+
+      .modal-stat-val {
+        display: block;
+        font-family: var(--font-heading);
+        font-size: 1.7rem;
+        line-height: 1.1;
+      }
+
+      .modal-stat-label {
+        display: block;
+        font-size: 0.68rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--mv-muted);
+      }
+
+      .modal-records { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; }
+
+      .modal-record.is-new { background: #fff1d6; border: 1px solid var(--mv-accent); font-family: var(--font-heading); }
+
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after {
           animation-duration: 0.01ms !important;
@@ -925,7 +1034,7 @@
               <span class="game-card-icon" aria-hidden="true">🛁</span>
               <span>
                 <h2>El baño peludo</h2>
-                <p>Reventá las burbujas para dejar impecable a cada mascota.</p>
+                <p>Reventá burbujas, subí de nivel y superá tu récord. ¿Hasta dónde llegás?</p>
                 <span class="game-card-best" data-best="bano" hidden></span>
               </span>
               <span class="game-card-cta">Jugar →</span>
@@ -945,7 +1054,7 @@
               <span class="game-card-icon" aria-hidden="true">🦴</span>
               <span>
                 <h2>Atrapá el premio</h2>
-                <p>Agarrá los premios sanos y esquivá los alimentos tóxicos.</p>
+                <p>Agarrá los premios sanos, esquivá los tóxicos y aguantá cada vez más rápido.</p>
                 <span class="game-card-best" data-best="premios" hidden></span>
               </span>
               <span class="game-card-cta">Jugar →</span>
@@ -961,16 +1070,22 @@
             <div class="hud-item">
               <span class="hud-label">Puntos</span>
               <span class="hud-value" id="bano-score">0</span>
+              <span class="hud-sub" id="bano-best"></span>
             </div>
             <div class="hud-item">
-              <span class="hud-label">Tiempo</span>
+              <span class="hud-label">Nivel</span>
+              <span class="hud-value" id="bano-level">1</span>
+            </div>
+            <div class="hud-item">
+              <span class="hud-label" id="bano-time-label">Vidas</span>
               <span class="hud-value" id="bano-time">1:00</span>
             </div>
-            <div class="hud-item">
-              <span class="hud-label">Limpieza</span>
-              <span class="hud-value"><span id="bano-clean">0</span>%<small id="bano-washed" style="font-size:0.75rem;margin-left:0.4rem" hidden></small></span>
-              <div class="meter" style="--meter-color: var(--g-bano)"><div class="meter-fill" id="bano-meter"></div></div>
-            </div>
+          </div>
+
+          <div class="progress-row">
+            <span class="progress-label">Limpieza <b id="bano-clean">0</b>%</span>
+            <div class="meter" style="--meter-color: var(--g-bano)"><div class="meter-fill" id="bano-meter"></div></div>
+            <span class="combo-chip" id="bano-combo" hidden></span>
           </div>
 
           <div class="bath-stage" id="bath-stage">
@@ -1081,18 +1196,23 @@
             <div class="stage-overlay" id="bano-start">
               <div class="start-card">
                 <h2>El baño peludo</h2>
-                <p>Tocá las burbujas antes de que se escapen. Cada una limpia un poco: cuando la mascota queda impecable, llega la siguiente.</p>
-                <div class="pill-group" role="group" aria-label="Duración">
+                <div class="pill-group is-modes" id="bano-modes" role="group" aria-label="Modo de juego">
+                  <button type="button" class="pill" data-mode="libre" aria-pressed="true">Libre</button>
+                  <button type="button" class="pill" data-mode="tiempo" aria-pressed="false">Contrarreloj</button>
+                </div>
+                <p class="start-rules" id="bano-rules"></p>
+                <div class="pill-group" id="bano-durations" role="group" aria-label="Duración" hidden>
                   <button type="button" class="pill" data-duration="60" aria-pressed="true">1 min</button>
                   <button type="button" class="pill" data-duration="180" aria-pressed="false">3 min</button>
                   <button type="button" class="pill" data-duration="300" aria-pressed="false">5 min</button>
                 </div>
+                <span class="start-record" id="bano-record"></span>
                 <button type="button" class="btn" id="bano-play">¡A bañar!</button>
               </div>
             </div>
           </div>
 
-          <p class="game-hint">Las burbujas doradas valen más. 🫧</p>
+          <p class="game-hint" id="bano-hint"></p>
         </div>
       </section>
 
@@ -1130,32 +1250,44 @@
             <div class="hud-item">
               <span class="hud-label">Puntos</span>
               <span class="hud-value" id="premios-score">0</span>
-            </div>
-            <div class="hud-item">
-              <span class="hud-label">Tiempo</span>
-              <span class="hud-value" id="premios-time">30s</span>
+              <span class="hud-sub" id="premios-best"></span>
             </div>
             <div class="hud-item">
               <span class="hud-label">Nivel</span>
               <span class="hud-value" id="premios-level">1</span>
             </div>
+            <div class="hud-item">
+              <span class="hud-label" id="premios-time-label">Vidas</span>
+              <span class="hud-value" id="premios-time">30s</span>
+            </div>
           </div>
 
-          <div class="catch-stage">
+          <div class="progress-row">
+            <span class="progress-label">Premios <b id="premios-caught">0</b>/<span id="premios-need">6</span></span>
+            <div class="meter" style="--meter-color: var(--g-premio)"><div class="meter-fill" id="premios-meter"></div></div>
+            <span class="combo-chip" id="premios-combo" hidden></span>
+          </div>
+
+          <div class="catch-stage" id="catch-stage">
             <div class="catch-grid" id="catch-grid"></div>
 
             <div class="stage-overlay" id="premios-start">
               <div class="start-card">
                 <h2>Atrapá el premio</h2>
-                <p>Tocá los premios sanos cuando asomen. ¡Cuidado con los alimentos tóxicos para mascotas: restan puntos!</p>
+                <div class="pill-group is-modes" id="premios-modes" role="group" aria-label="Modo de juego">
+                  <button type="button" class="pill" data-mode="libre" aria-pressed="true">Libre</button>
+                  <button type="button" class="pill" data-mode="tiempo" aria-pressed="false">Contrarreloj</button>
+                </div>
+                <p class="start-rules" id="premios-rules"></p>
+                <span class="start-record" id="premios-record"></span>
                 <button type="button" class="btn" id="premios-play">¡Empezar!</button>
               </div>
             </div>
           </div>
 
           <div class="catch-legend">
-            <span class="good">🦴 🥩 🐟 🥕 &nbsp;Sanos +10</span>
-            <span class="bad">🍫 🍇 🧅 🧦 &nbsp;¡Evitalos! −15</span>
+            <span class="good">🦴 🥩 🐟 🥕 ⭐ &nbsp;Sanos: ¡tocalos!</span>
+            <span class="bad">🍫 🍇 🧅 🧦 &nbsp;¡Evitalos!</span>
           </div>
         </div>
       </section>
@@ -1169,7 +1301,8 @@
         <div class="modal-icon" id="modal-icon">🏆</div>
         <h2 id="modal-title">¡Buen trabajo!</h2>
         <p id="modal-msg"></p>
-        <span class="modal-record" id="modal-record" hidden></span>
+        <div class="modal-stats" id="modal-stats" hidden></div>
+        <div class="modal-records" id="modal-records"></div>
         <div class="modal-actions">
           <button type="button" class="btn" id="modal-retry">Jugar de nuevo</button>
           <a class="btn btn-ghost" href="#" id="modal-menu">Otros juegos</a>
@@ -1193,25 +1326,90 @@
           return a;
         }
 
-        /* ---------------- Récords (solo en este navegador) ---------------- */
-        function getBest(key) {
-          try { return parseInt(localStorage.getItem("mivet-juegos-" + key), 10) || 0; } catch (e) { return 0; }
+        /* ---------------- Récords (solo en este navegador) ----------------
+           Cada juego guarda, por modo, el mejor puntaje y el mejor nivel. */
+        function fmt(n) { return Number(n).toLocaleString("es-AR"); }
+
+        function readInt(k) {
+          try { return parseInt(localStorage.getItem(k), 10) || 0; } catch (e) { return 0; }
         }
 
-        // Guarda el puntaje si supera el récord. Devuelve true si es nuevo récord.
-        function saveBest(key, score) {
-          var prev = getBest(key);
-          if (score <= prev) return false;
-          try { localStorage.setItem("mivet-juegos-" + key, String(score)); } catch (e) {}
-          return true;
+        function getRec(key) {
+          return { score: readInt("mivet-juegos-" + key), level: readInt("mivet-juegos-" + key + "-nivel") };
         }
+
+        // Guarda puntaje y nivel si superan los récords. Devuelve qué se superó.
+        function saveRec(key, score, level) {
+          var prev = getRec(key);
+          var r = { prev: prev, newScore: score > prev.score, newLevel: !!level && level > prev.level };
+          try {
+            if (r.newScore) localStorage.setItem("mivet-juegos-" + key, String(score));
+            if (r.newLevel) localStorage.setItem("mivet-juegos-" + key + "-nivel", String(level));
+          } catch (e) {}
+          return r;
+        }
+
+        function recordLine(key) {
+          var r = getRec(key);
+          if (!r.score) return "🏁 Todavía no hay récord: ¡dejá el primero!";
+          return "🏆 Tu récord: " + fmt(r.score) + " pts" + (r.level ? " · Nivel " + r.level : "");
+        }
+
+        function loadMode(game) {
+          try { return localStorage.getItem("mivet-juegos-modo-" + game) === "tiempo" ? "tiempo" : "libre"; } catch (e) { return "libre"; }
+        }
+
+        function saveMode(game, mode) {
+          try { localStorage.setItem("mivet-juegos-modo-" + game, mode); } catch (e) {}
+        }
+
+        // Qué récord muestra cada tarjeta del menú: el del modo Libre si
+        // existe; si no, el primero que haya.
+        var BEST_KEYS = {
+          bano: [["bano-libre", "Libre"], ["bano-60", "1 min"], ["bano-180", "3 min"], ["bano-300", "5 min"]],
+          trivia: [["trivia", ""]],
+          premios: [["premios-libre", "Libre"], ["premios-tiempo", "Contrarreloj"]]
+        };
 
         function renderBests() {
           document.querySelectorAll("[data-best]").forEach(function (el) {
-            var best = getBest(el.dataset.best);
-            el.hidden = !best;
-            el.textContent = "Tu récord: " + best + " pts";
+            var found = null;
+            (BEST_KEYS[el.dataset.best] || []).some(function (pair) {
+              var r = getRec(pair[0]);
+              if (r.score) found = { r: r, label: pair[1] };
+              return !!found;
+            });
+            el.hidden = !found;
+            if (found) {
+              el.textContent = "🏆 " + (found.label ? found.label + ": " : "Récord: ") + fmt(found.r.score) + " pts" +
+                (found.r.level ? " · Nivel " + found.r.level : "");
+            }
           });
+        }
+
+        // Combo: cada 6 aciertos seguidos sube el multiplicador (máx. x5).
+        function comboMult(streak) { return Math.min(5, 1 + Math.floor(streak / 6)); }
+
+        function heartsText(n, max) {
+          var t = "";
+          for (var i = 0; i < max; i++) t += i < n ? "❤️" : "🖤";
+          return t;
+        }
+
+        // Pequeño "salto" para destacar un número que cambió.
+        function bump(el) {
+          if (el && el.animate) el.animate(
+            [{ transform: "scale(1)" }, { transform: "scale(1.3)" }, { transform: "scale(1)" }],
+            { duration: 260, easing: "ease-out" });
+        }
+
+        // Destello rojo sobre el escenario al perder una vida.
+        function flashHurt(stageEl) {
+          var d = document.createElement("div");
+          d.className = "hurt-flash";
+          stageEl.appendChild(d);
+          setTimeout(function () { d.remove(); }, 450);
+          if (navigator.vibrate) navigator.vibrate(70);
         }
 
         /* ---------------- Sonido (Web Audio, sin archivos) ---------------- */
@@ -1244,7 +1442,9 @@
           gold: function () { tone([660, 990, 1320], 0.18, "triangle", 0.14); },
           right: function () { tone([523, 659, 784], 0.3, "triangle", 0.16); },
           wrong: function () { tone([220, 170], 0.25, "square", 0.07); },
-          win: function () { tone([523, 659, 784, 1047], 0.55, "triangle", 0.16); }
+          win: function () { tone([523, 659, 784, 1047], 0.55, "triangle", 0.16); },
+          level: function () { tone([523, 659, 784, 1047, 1319], 0.6, "triangle", 0.15); },
+          miss: function () { tone([330, 240], 0.22, "sine", 0.14); }
         };
 
         $("sound-btn").addEventListener("click", function () {
@@ -1358,15 +1558,57 @@
           $("modal-icon").textContent = o.icon;
           $("modal-title").textContent = o.title;
           $("modal-msg").textContent = o.msg;
-          var isRecord = saveBest(o.key, o.score);
-          var best = getBest(o.key);
-          $("modal-record").hidden = !best;
-          $("modal-record").textContent = isRecord ? "🎉 ¡Nuevo récord!" : "Tu récord: " + best + " pts";
+
+          var stats = $("modal-stats");
+          stats.innerHTML = "";
+          stats.hidden = !o.stats;
+          (o.stats || []).forEach(function (st) {
+            var box = document.createElement("div");
+            box.className = "modal-stat";
+            var val = document.createElement("span");
+            val.className = "modal-stat-val";
+            val.textContent = typeof st.value === "number" ? fmt(st.value) : st.value;
+            var lab = document.createElement("span");
+            lab.className = "modal-stat-label";
+            lab.textContent = st.label;
+            box.append(val, lab);
+            stats.appendChild(box);
+          });
+
+          // Récords: se avisa lo que se superó y, si no, cuánto faltó.
+          var lines = [];
+          var big = false;
+          var rec = o.key && o.score > 0 ? saveRec(o.key, o.score, o.level) : null;
+          if (rec) {
+            if (rec.newScore) {
+              lines.push({ text: rec.prev.score ? "🎉 ¡Nuevo récord de puntos!" : "🎉 ¡Primer récord guardado!", isNew: true });
+              big = big || rec.prev.score > 0;
+            }
+            // El nivel solo se anuncia si supera uno anterior (el primero ya se ve en el resultado).
+            if (rec.newLevel && rec.prev.level > 0) {
+              lines.push({ text: "🏅 ¡Nuevo récord de nivel!", isNew: true });
+              big = true;
+            }
+            if (!rec.newScore && rec.prev.score > 0) {
+              var gap = rec.prev.score - o.score + 1;
+              lines.push({ text: "Tu récord: " + fmt(rec.prev.score) + " pts" + (rec.prev.level ? " · Nivel " + rec.prev.level : "") +
+                " — te faltaron " + fmt(gap) + " para superarlo" });
+            }
+          }
+          var box = $("modal-records");
+          box.innerHTML = "";
+          lines.forEach(function (l) {
+            var chip = document.createElement("span");
+            chip.className = "modal-record" + (l.isNew ? " is-new" : "");
+            chip.textContent = l.text;
+            box.appendChild(chip);
+          });
+
           retryFn = o.retry;
           $("modal-retry").textContent = o.retryLabel || "Jugar de nuevo";
           $("modal").hidden = false;
           sfx.win();
-          burst({});
+          burst({ particleCount: big ? 150 : 60 });
           $("modal-retry").focus();
         }
 
@@ -1392,6 +1634,9 @@
 
         /* =====================================================
            JUEGO 1 — EL BAÑO PELUDO
+           Modos: Libre (3 vidas, sin reloj, cada vez más difícil) y
+           Contrarreloj (1, 3 o 5 minutos). En ambos, cada mascota
+           limpia sube un nivel.
            ===================================================== */
         (function () {
           var stage = $("bath-stage");
@@ -1400,9 +1645,7 @@
           var pet = $("bath-pet");
           var paws = $("bath-paws");
           var spots = Array.prototype.slice.call(scene.querySelectorAll(".dirt > *"));
-
-          // Puntos de burbuja necesarios para dejar limpia a una mascota.
-          var CLEAN_TARGET = 180;
+          var MAX_LIVES = 3;
 
           var FURS = [
             { fur: "#d9924a", dark: "#8a5122", muzzle: "#fbe7c8" },
@@ -1418,16 +1661,47 @@
             { pts: 20, tint: "175,140,235", w: 15 },
             { pts: 30, tint: "245,197,24", w: 7, gold: true }
           ];
-          var TYPE_WEIGHT = TYPES.reduce(function (s, t) { return s + t.w; }, 0);
+          var TYPE_WEIGHT = TYPES.reduce(function (sum, t) { return sum + t.w; }, 0);
+          var MUD = { pts: 0, tint: "128,88,54", mud: true };
 
-          var s = {
-            duration: 60, playing: false, paused: false,
-            endAt: 0, remaining: 0, score: 0, clean: 0, washed: 0,
-            furIdx: 0, celebrating: false, bubbles: [],
-            raf: 0, last: 0, spawnAcc: 0, shownSec: -1
+          // Dificultad por nivel: cada mascota pide más burbujas, las burbujas
+          // salen más seguido, suben más rápido, se achican y aparecen las de
+          // barro (que hay que esquivar).
+          function levelCfg(L) {
+            return {
+              target: 140 + 30 * (L - 1),
+              interval: Math.max(0.34, 0.85 * Math.pow(0.93, L - 1)),
+              travel: Math.max(2.6, 5.4 * Math.pow(0.95, L - 1)),
+              scale: Math.max(0.75, 1 - 0.02 * (L - 1)),
+              mud: L < 3 ? 0 : Math.min(0.26, 0.06 + 0.02 * (L - 3)),
+              max: Math.min(20, 12 + L)
+            };
+          }
+
+          var RULES = {
+            libre: "Sin reloj y con 3 ❤️. Perdés una si se escapa una burbuja o tocás una de barro ✕. Cada mascota limpia sube el nivel: ¿hasta dónde llegás?",
+            tiempo: "Sumá todos los puntos que puedas antes de que se acabe el tiempo. Cada mascota limpia sube el nivel y las burbujas se aceleran."
+          };
+          var HINTS = {
+            libre: "Encadená toques sin fallar para multiplicar los puntos 🔥",
+            tiempo: "Las burbujas de barro ✕ te ensucian: esquivalas. 🫧"
           };
 
+          var s = {
+            mode: loadMode("bano"), duration: 60,
+            playing: false, paused: false, endTimer: 0,
+            endAt: 0, remaining: 0,
+            score: 0, level: 1, clean: 0, streak: 0, lives: MAX_LIVES, washed: 0,
+            prevBest: 0, recordShown: false, lastPop: 0, shownMult: 1,
+            furIdx: 0, celebrating: false, bubbles: [], cfg: levelCfg(1),
+            raf: 0, last: 0, spawnAcc: 0, nextIn: 0.3, shownSec: -1
+          };
+
+          function recKey() { return s.mode === "libre" ? "bano-libre" : "bano-" + s.duration; }
+          function mult() { return comboMult(s.streak); }
+
           function pickType() {
+            if (Math.random() < s.cfg.mud) return MUD;
             var r = Math.random() * TYPE_WEIGHT;
             for (var i = 0; i < TYPES.length; i++) {
               r -= TYPES[i].w;
@@ -1445,8 +1719,9 @@
             });
           }
 
+          /* ---------- HUD ---------- */
           function renderClean() {
-            var c = clamp(s.clean / CLEAN_TARGET, 0, 1);
+            var c = clamp(s.clean / s.cfg.target, 0, 1);
             var pct = Math.round(c * 100);
             $("bano-clean").textContent = pct;
             $("bano-meter").style.width = pct + "%";
@@ -1454,20 +1729,73 @@
             spots.forEach(function (sp, i) { sp.classList.toggle("is-clean", i >= visible); });
           }
 
+          function renderBest() {
+            var el = $("bano-best");
+            if (s.recordShown) {
+              el.textContent = "🏆 ¡Récord!";
+              el.classList.add("is-record");
+            } else {
+              el.textContent = s.prevBest ? "Récord " + fmt(s.prevBest) : "";
+              el.classList.remove("is-record");
+            }
+          }
+
           function renderScore() {
-            $("bano-score").textContent = s.score;
-            var w = $("bano-washed");
-            w.hidden = !s.washed;
-            w.textContent = "· " + s.washed + " 🐶";
+            $("bano-score").textContent = fmt(s.score);
+            // Al superar el récord anterior se avisa una sola vez por partida.
+            if (!s.recordShown && s.prevBest > 0 && s.score > s.prevBest) {
+              s.recordShown = true;
+              renderBest();
+              if (s.playing) {
+                floatText(layer, geo.W / 2, geo.H * 0.3, "🏆 ¡Récord!", "is-big");
+                sfx.gold();
+                burst({ particleCount: 50, origin: { y: 0.4 } });
+              }
+            }
+          }
+
+          function renderLevel() { $("bano-level").textContent = s.level; }
+
+          function renderCombo() {
+            var m = mult();
+            var chip = $("bano-combo");
+            chip.hidden = m < 2;
+            if (m >= 2) {
+              chip.textContent = "🔥 x" + m;
+              if (m !== s.shownMult) bump(chip);
+            }
+            s.shownMult = m;
+          }
+
+          // El tercer casillero es el tiempo (Contrarreloj) o las vidas (Libre).
+          function renderThird() {
+            var el = $("bano-time");
+            var libre = s.mode === "libre";
+            $("bano-time-label").textContent = libre ? "Vidas" : "Tiempo";
+            el.classList.toggle("is-lives", libre);
+            if (libre) {
+              el.textContent = heartsText(s.lives, MAX_LIVES);
+              el.setAttribute("aria-label", "Vidas: " + s.lives + " de " + MAX_LIVES);
+              el.classList.remove("is-urgent");
+            } else {
+              el.removeAttribute("aria-label");
+              s.shownSec = -1;
+              renderTime(s.playing ? s.remaining / 1000 : s.duration);
+            }
           }
 
           function renderTime(secLeft) {
+            if (s.mode === "libre") return;
             var sec = Math.ceil(secLeft);
             if (sec === s.shownSec) return;
             s.shownSec = sec;
             var el = $("bano-time");
             el.textContent = fmtTime(sec);
             el.classList.toggle("is-urgent", sec <= 10);
+          }
+
+          function renderAll() {
+            renderScore(); renderBest(); renderLevel(); renderClean(); renderCombo(); renderThird();
           }
 
           function resetPet() {
@@ -1482,10 +1810,7 @@
             layer.querySelectorAll(".float-text, .bubble").forEach(function (el) { el.remove(); });
           }
 
-          // Medidas del escenario. Se leen del DOM una sola vez (y al
-          // cambiar el tamaño), no en cada burbuja: leer el layout justo
-          // después de modificar el DOM obliga al navegador a recalcularlo
-          // en el medio del toque y se nota como un tirón.
+          /* ---------- Geometría (se lee una sola vez, no por burbuja) ---------- */
           var geo = { W: 0, H: 0, base: 48, sceneLeft: 0, drawnW: 0, rimY: 0, sceneCx: 0, sceneTop: 0, sceneH: 0, vx: 0, vy: 0 };
 
           function measure() {
@@ -1511,31 +1836,26 @@
 
           if (window.ResizeObserver) new ResizeObserver(measure).observe(stage);
 
+          /* ---------- Burbujas ---------- */
           function spawn() {
-            var W = geo.W;
-            var H = geo.H;
-            var rimY = geo.rimY;
-
             var type = pickType();
-            var size = geo.base * (type.gold ? 0.82 : rand(0.9, 1.12));
+            var size = clamp(geo.base * s.cfg.scale * (type.gold ? 0.85 : rand(0.92, 1.1)), 40, 90);
             var x = geo.sceneLeft + geo.drawnW * rand(0.1, 0.9) - size / 2;
-            x = clamp(x, 4, W - size - 4);
-
-            var progress = 1 - s.remaining / (s.duration * 1000);
-            var travel = rand(4.2, 5.8) / (1 + progress * 0.45) / (type.gold ? 1.35 : 1);
+            x = clamp(x, 4, geo.W - size - 4);
+            var travel = s.cfg.travel * rand(0.92, 1.12) / (type.gold ? 1.3 : 1);
 
             var el = document.createElement("div");
-            el.className = "bubble" + (type.gold ? " is-gold" : "");
+            el.className = "bubble" + (type.gold ? " is-gold" : "") + (type.mud ? " is-mud" : "");
             el.style.width = el.style.height = size + "px";
             el.style.setProperty("--tint", type.tint);
             el.style.setProperty("--label-size", Math.max(12, size * 0.26) + "px");
-            el.textContent = "+" + type.pts;
+            el.textContent = type.mud ? "✕" : "+" + type.pts;
             layer.appendChild(el);
 
             var b = {
               el: el, type: type, size: size, x0: x,
-              y: rimY - size * 0.6,
-              speed: H / travel,
+              y: geo.rimY - size * 0.6,
+              speed: geo.H / travel,
               amp: rand(6, 20), freq: rand(1.2, 2.4), phase: rand(0, 6.28), t: 0
             };
             el._bubble = b;
@@ -1554,16 +1874,19 @@
             var dt = Math.min(0.05, (now - s.last) / 1000);
             s.last = now;
 
-            s.remaining = s.endAt - performance.now();
-            renderTime(s.remaining / 1000);
-            if (s.remaining <= 0) { finish(); return; }
+            if (s.mode === "tiempo") {
+              s.remaining = s.endAt - performance.now();
+              renderTime(s.remaining / 1000);
+              if (s.remaining <= 0) { finish(); return; }
+            }
 
-            var progress = 1 - s.remaining / (s.duration * 1000);
-            var interval = 0.72 - progress * 0.3;
             s.spawnAcc += dt;
-            if (s.spawnAcc >= interval) {
+            if (s.spawnAcc >= s.nextIn) {
               s.spawnAcc = 0;
-              if (s.bubbles.length < 14) spawn();
+              s.nextIn = s.cfg.interval * rand(0.8, 1.2);
+              if (s.bubbles.length < s.cfg.max) spawn();
+              // Desde el nivel 7, a veces salen dos juntas.
+              if (s.level >= 7 && Math.random() < 0.25 && s.bubbles.length < s.cfg.max) spawn();
             }
 
             for (var i = s.bubbles.length - 1; i >= 0; i--) {
@@ -1573,11 +1896,36 @@
               if (b.y < -b.size) {
                 b.el.remove();
                 s.bubbles.splice(i, 1);
+                // En Libre, dejar escapar una burbuja normal cuesta una vida.
+                if (s.mode === "libre" && !b.type.mud && !b.type.gold) {
+                  loseLife("¡Se escapó!", clamp(b.cx, 40, geo.W - 40), 34);
+                  if (!s.playing) return;
+                }
               } else {
                 place(b);
               }
             }
             s.raf = requestAnimationFrame(loop);
+          }
+
+          function loseLife(text, x, y) {
+            s.lives = Math.max(0, s.lives - 1);
+            s.streak = 0;
+            renderThird();
+            renderCombo();
+            bump($("bano-time"));
+            flashHurt(stage);
+            sfx.miss();
+            floatText(layer, x, y, text, "is-bad");
+            if (s.lives <= 0) gameOver();
+          }
+
+          // Sin vidas: se frena el juego un instante para que se vea el
+          // último golpe y recién ahí aparece el resultado.
+          function gameOver() {
+            s.playing = false;
+            cancelAnimationFrame(s.raf);
+            s.endTimer = setTimeout(finish, 700);
           }
 
           function pop(b) {
@@ -1587,25 +1935,48 @@
             b.el.classList.add("is-popping");
             b.el.style.transform = "translate3d(" + (b.cx - b.size / 2) + "px," + b.y + "px,0) scale(1.45)";
             setTimeout(function () { b.el.remove(); }, 220);
+            s.lastPop = performance.now();
 
-            floatText(layer, b.cx, b.y + b.size / 2, "+" + b.type.pts);
+            if (b.type.mud) { popMud(b); return; }
 
-            s.score += b.type.pts;
+            s.streak += 1;
+            var m = mult();
+            var pts = b.type.pts * m;
+            s.score += pts;
+            floatText(layer, b.cx, b.y + b.size / 2, "+" + pts);
             (b.type.gold ? sfx.gold : sfx.pop)();
             wiggle();
 
             if (!s.celebrating) {
               s.clean += b.type.pts;
               renderClean();
-              if (s.clean >= CLEAN_TARGET) celebrate();
+              if (s.clean >= s.cfg.target) completePet();
             }
             renderScore();
+            renderCombo();
+          }
+
+          // Tocar barro: ensucia a la mascota, baja el puntaje y corta la racha.
+          function popMud(b) {
+            var x = b.cx, y = b.y + b.size / 2;
+            s.score = Math.max(0, s.score - 20);
+            if (!s.celebrating) { s.clean = Math.max(0, s.clean - 30); renderClean(); }
+            renderScore();
+            if (s.mode === "libre") {
+              loseLife("¡Barro!", x, y);
+            } else {
+              s.streak = 0;
+              renderCombo();
+              flashHurt(stage);
+              sfx.wrong();
+              floatText(layer, x, y, "−20", "is-bad");
+            }
           }
 
           var wig = null;
 
           // Sacudida del perro con la Web Animations API: se puede reiniciar
-          // en cada toque sin forzar un reflow (antes se hacía con getBBox).
+          // en cada toque sin forzar un reflow.
           function wiggle() {
             if (s.celebrating || !pet.animate) return;
             if (wig) wig.cancel();
@@ -1617,15 +1988,26 @@
             ], { duration: 280, easing: "ease" });
           }
 
-          function celebrate() {
+          // Mascota impecable: bonus, sube el nivel y llega la siguiente.
+          function completePet() {
             s.celebrating = true;
             s.washed += 1;
-            s.score += 50;
+            var bonus = 40 + 10 * s.level;
+            s.score += bonus;
+            s.level += 1;
+            s.cfg = levelCfg(s.level);
+            if (s.mode === "libre" && s.lives < MAX_LIVES) {
+              s.lives += 1;
+              renderThird();
+              bump($("bano-time"));
+            }
             renderScore();
+            renderLevel();
+            bump($("bano-level"));
             scene.querySelector("svg").classList.add("is-happy");
-            sfx.win();
+            sfx.level();
 
-            floatText(layer, geo.sceneCx, geo.sceneTop + geo.sceneH * 0.12, "¡Impecable! +50", "is-big");
+            floatText(layer, geo.sceneCx, geo.sceneTop + geo.sceneH * 0.12, "¡Nivel " + s.level + "! +" + bonus, "is-big");
             burst({
               particleCount: 40,
               spread: 60,
@@ -1653,82 +2035,125 @@
           }
 
           layer.addEventListener("pointerdown", function (e) {
+            if (!s.playing || s.paused) return;
             var el = e.target.closest(".bubble");
-            if (!el || !s.playing || s.paused) return;
             e.preventDefault();
-            pop(el._bubble);
+            if (el) {
+              pop(el._bubble);
+            } else if (performance.now() - s.lastPop > 300 && s.streak > 0) {
+              // Tocar en vacío corta la racha (no resta nada). Se ignora justo
+              // después de reventar una burbuja, por si el dedo llega tarde.
+              s.streak = 0;
+              renderCombo();
+            }
           });
 
+          /* ---------- Ciclo de la partida ---------- */
           function start() {
+            clearTimeout(s.endTimer);
             clearBubbles();
             measure();
             s.playing = true;
             s.paused = false;
             s.score = 0;
+            s.level = 1;
+            s.cfg = levelCfg(1);
+            s.streak = 0;
+            s.shownMult = 1;
+            s.lives = MAX_LIVES;
             s.washed = 0;
+            s.recordShown = false;
+            s.prevBest = getRec(recKey()).score;
             s.celebrating = false;
             s.furIdx = Math.floor(Math.random() * FURS.length);
-            s.shownSec = -1;
             s.spawnAcc = 0.5;
+            s.nextIn = 0.5;
             s.remaining = s.duration * 1000;
             s.endAt = performance.now() + s.remaining;
             s.last = performance.now();
             scene.classList.remove("is-swapping");
             setFur(s.furIdx);
             resetPet();
-            renderScore();
+            renderAll();
             $("bano-start").hidden = true;
             s.raf = requestAnimationFrame(loop);
           }
 
           function stop() {
             s.playing = false;
+            clearTimeout(s.endTimer);
             cancelAnimationFrame(s.raf);
             clearBubbles();
           }
 
           function finish() {
+            var timed = s.mode === "tiempo";
             stop();
             showResult({
-              key: "bano",
-              icon: "🧼",
-              title: "¡Terminó el baño!",
+              key: recKey(),
+              icon: timed ? "⏱️" : "🧼",
+              title: timed ? "¡Se acabó el tiempo!" : "¡Fin del baño!",
               msg: s.washed
-                ? "Dejaste impecables a " + s.washed + (s.washed === 1 ? " mascota" : " mascotas") + " y sumaste " + s.score + " puntos."
-                : "Sumaste " + s.score + " puntos. ¡La próxima seguro la dejás impecable!",
+                ? "Llegaste al nivel " + s.level + " y dejaste impecables a " + s.washed + (s.washed === 1 ? " mascota." : " mascotas.")
+                : "Todavía no dejaste impecable a ninguna mascota. ¡La próxima sí!",
+              stats: [{ label: "Puntos", value: s.score }, { label: "Nivel", value: s.level }],
               score: s.score,
+              level: s.level,
               retry: start
             });
+          }
+
+          /* ---------- Pantalla de inicio ---------- */
+          function renderStart() {
+            document.querySelectorAll("#bano-modes [data-mode]").forEach(function (b) {
+              b.setAttribute("aria-pressed", String(b.dataset.mode === s.mode));
+            });
+            document.querySelectorAll("#bano-durations [data-duration]").forEach(function (b) {
+              b.setAttribute("aria-pressed", String(parseInt(b.dataset.duration, 10) === s.duration));
+            });
+            $("bano-durations").hidden = s.mode !== "tiempo";
+            $("bano-rules").textContent = RULES[s.mode];
+            $("bano-record").textContent = recordLine(recKey());
+            $("bano-hint").textContent = HINTS[s.mode];
+            s.prevBest = getRec(recKey()).score;
+            s.recordShown = false;
+            renderAll();
           }
 
           function enter() {
             stop();
             s.furIdx = Math.floor(Math.random() * FURS.length);
             setFur(s.furIdx);
-            resetPet();
             s.score = 0;
+            s.level = 1;
+            s.cfg = levelCfg(1);
+            s.streak = 0;
+            s.lives = MAX_LIVES;
             s.washed = 0;
-            renderScore();
-            s.shownSec = -1;
-            renderTime(s.duration);
+            resetPet();
+            renderStart();
             $("bano-start").hidden = false;
           }
 
-          document.querySelectorAll("#bano-start [data-duration]").forEach(function (btn) {
+          document.querySelectorAll("#bano-modes [data-mode]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              s.mode = btn.dataset.mode;
+              saveMode("bano", s.mode);
+              renderStart();
+            });
+          });
+
+          document.querySelectorAll("#bano-durations [data-duration]").forEach(function (btn) {
             btn.addEventListener("click", function () {
               s.duration = parseInt(btn.dataset.duration, 10);
-              document.querySelectorAll("#bano-start [data-duration]").forEach(function (b) {
-                b.setAttribute("aria-pressed", String(b === btn));
-              });
-              s.shownSec = -1;
-              renderTime(s.duration);
+              renderStart();
             });
           });
 
           $("bano-play").addEventListener("click", function () { warmUp(); start(); });
 
-          // Si se cambia de pestaña o se bloquea el celular, el tiempo no
-          // sigue corriendo.
+          // Si se cambia de pestaña o se bloquea el celular, la partida se
+          // pausa (el tiempo y las burbujas no siguen corriendo).
           document.addEventListener("visibilitychange", function () {
             if (!s.playing) return;
             if (document.hidden) {
@@ -1969,7 +2394,11 @@
             if (s.correct === PER_ROUND) msg += " ¡Sabés un montón!";
             else if (s.correct >= PER_ROUND / 2) msg += " ¡Muy bien!";
             else msg += " ¡Ahora ya sabés un poco más!";
-            showResult({ key: "trivia", icon: "🎓", title: "¡Trivia completa!", msg: msg, score: s.score, retry: start, retryLabel: "Siguiente tanda →" });
+            showResult({
+              key: "trivia", icon: "🎓", title: "¡Trivia completa!", msg: msg, score: s.score,
+              stats: [{ label: "Puntos", value: s.score }, { label: "Aciertos", value: s.correct + "/" + PER_ROUND }],
+              retry: start, retryLabel: "Siguiente tanda →"
+            });
           });
 
           games.trivia = { enter: start };
@@ -1977,13 +2406,26 @@
 
         /* =====================================================
            JUEGO 3 — ATRAPÁ EL PREMIO
+           Modos: Libre (3 vidas, sin reloj) y Contrarreloj (30 s y
+           cada nivel regala tiempo extra). Cada nivel pide más
+           premios y todo pasa más rápido.
            ===================================================== */
         (function () {
-          var DURATION = 30;
-          var GOOD = ["🦴", "🥩", "🐟", "🥕"];
+          var MAX_LIVES = 3;
+          var BASE_TIME = 30;
+          // Segundos que regala completar un nivel en Contrarreloj: 7 al pasar
+          // del 1 al 2 y baja de a uno hasta 3, así los niveles altos (que
+          // cuestan más) ya no alargan la partida y esta termina.
+          function levelTime(L) { return Math.max(3, 8 - L); }
+          var GOOD = [
+            { icon: "🦴", pts: 10 }, { icon: "🥩", pts: 15 },
+            { icon: "🐟", pts: 10 }, { icon: "🥕", pts: 10 }
+          ];
+          var STAR = { icon: "⭐", pts: 30, star: true };
           var BAD = ["🍫", "🍇", "🧅", "🧦"];
 
           var grid = $("catch-grid");
+          var stageEl = $("catch-stage");
           var cells = [];
           for (var i = 0; i < 9; i++) {
             var c = document.createElement("button");
@@ -1994,16 +2436,106 @@
             cells.push({ el: c, item: null, hideTimer: 0 });
           }
 
-          var s = { playing: false, score: 0, level: 1, timeLeft: DURATION, tick: 0, spawnTimer: 0 };
-
-          function render() {
-            $("premios-score").textContent = s.score;
-            $("premios-level").textContent = s.level;
-            var t = $("premios-time");
-            t.textContent = s.timeLeft + "s";
-            t.classList.toggle("is-urgent", s.playing && s.timeLeft <= 5);
+          // Dificultad por nivel: hay que atrapar más, los premios se quedan
+          // menos tiempo, salen más seguido, hay más tóxicos y desde el
+          // nivel 3 asoman de a varios.
+          function levelCfg(L) {
+            return {
+              need: 6 + 2 * (L - 1),
+              life: Math.max(520, 1600 - 105 * (L - 1)),
+              gap: Math.max(330, 900 - 55 * (L - 1)),
+              bad: Math.min(0.5, 0.28 + 0.02 * (L - 1))
+            };
           }
 
+          function simultaneous(L) {
+            var r = Math.random();
+            if (L < 3) return 1;
+            if (L < 6) return r < 0.35 ? 2 : 1;
+            if (L < 10) return r < 0.55 ? 2 : 1;
+            return r < 0.3 ? 3 : (r < 0.7 ? 2 : 1);
+          }
+
+          var RULES = {
+            libre: "Sin reloj y con 3 ❤️. Perdés una si se te escapa un premio sano o tocás uno tóxico. Cada nivel es más rápido: ¿hasta dónde llegás?",
+            tiempo: "Arrancás con 30 segundos y cada nivel te regala tiempo extra (⭐ suma 3 s). Tocá los premios sanos y evitá los tóxicos."
+          };
+
+          var s = {
+            mode: loadMode("premios"),
+            playing: false, paused: false, endTimer: 0,
+            score: 0, level: 1, caught: 0, total: 0, streak: 0, lives: MAX_LIVES,
+            timeLeft: BASE_TIME, tick: 0, spawnTimer: 0,
+            prevBest: 0, recordShown: false, shownMult: 1, cfg: levelCfg(1)
+          };
+
+          function recKey() { return s.mode === "libre" ? "premios-libre" : "premios-tiempo"; }
+          function mult() { return comboMult(s.streak); }
+
+          /* ---------- HUD ---------- */
+          function renderBest() {
+            var el = $("premios-best");
+            if (s.recordShown) {
+              el.textContent = "🏆 ¡Récord!";
+              el.classList.add("is-record");
+            } else {
+              el.textContent = s.prevBest ? "Récord " + fmt(s.prevBest) : "";
+              el.classList.remove("is-record");
+            }
+          }
+
+          function renderScore() {
+            $("premios-score").textContent = fmt(s.score);
+            if (!s.recordShown && s.prevBest > 0 && s.score > s.prevBest) {
+              s.recordShown = true;
+              renderBest();
+              if (s.playing) {
+                floatText(stageEl, stageEl.clientWidth / 2, stageEl.clientHeight * 0.1, "🏆 ¡Récord!", "is-big");
+                sfx.gold();
+                burst({ particleCount: 50, origin: { y: 0.4 } });
+              }
+            }
+          }
+
+          function renderProgress() {
+            $("premios-level").textContent = s.level;
+            $("premios-caught").textContent = s.caught;
+            $("premios-need").textContent = s.cfg.need;
+            $("premios-meter").style.width = clamp(s.caught / s.cfg.need, 0, 1) * 100 + "%";
+          }
+
+          function renderCombo() {
+            var m = mult();
+            var chip = $("premios-combo");
+            chip.hidden = m < 2;
+            if (m >= 2) {
+              chip.textContent = "🔥 x" + m;
+              if (m !== s.shownMult) bump(chip);
+            }
+            s.shownMult = m;
+          }
+
+          function renderThird() {
+            var el = $("premios-time");
+            var libre = s.mode === "libre";
+            $("premios-time-label").textContent = libre ? "Vidas" : "Tiempo";
+            el.classList.toggle("is-lives", libre);
+            if (libre) {
+              el.textContent = heartsText(s.lives, MAX_LIVES);
+              el.setAttribute("aria-label", "Vidas: " + s.lives + " de " + MAX_LIVES);
+              el.classList.remove("is-urgent");
+            } else {
+              el.removeAttribute("aria-label");
+              el.textContent = s.timeLeft + "s";
+              el.classList.toggle("is-urgent", s.playing && s.timeLeft <= 5);
+            }
+          }
+
+          function renderAll() {
+            renderScore(); renderBest(); renderProgress(); renderCombo(); renderThird();
+          }
+
+          /* ---------- Pozos ---------- */
           function clearCell(cell, cls) {
             clearTimeout(cell.hideTimer);
             var span = cell.el.firstChild;
@@ -2017,52 +2549,118 @@
             }
           }
 
+          // Un premio sano que se va sin que lo toquen: corta la racha y, en
+          // Libre, cuesta una vida. Las estrellas y los tóxicos no penalizan.
+          function expire(cell) {
+            var item = cell.item;
+            clearCell(cell, "is-leaving");
+            if (!s.playing || !item || item.bad || item.star) return;
+            s.streak = 0;
+            renderCombo();
+            if (s.mode === "libre") loseLife("¡Se escapó!", cell);
+          }
+
           function spawn() {
             if (!s.playing) return;
             var free = cells.filter(function (c) { return !c.item && !c.el.firstChild; });
-            // Desde el nivel 4 pueden aparecer dos a la vez.
-            var count = s.level >= 4 && Math.random() < 0.45 ? 2 : 1;
+            var count = simultaneous(s.level);
             for (var n = 0; n < count && free.length; n++) {
               var cell = free.splice(Math.floor(Math.random() * free.length), 1)[0];
-              var bad = Math.random() < 0.33 + s.level * 0.015;
-              var icon = pick(bad ? BAD : GOOD);
+              var bad = Math.random() < s.cfg.bad;
+              var item;
+              if (bad) item = { bad: true, icon: pick(BAD), pts: 15 };
+              else if (Math.random() < 0.06) item = { star: true, icon: STAR.icon, pts: STAR.pts };
+              else { var g = pick(GOOD); item = { icon: g.icon, pts: g.pts }; }
+
               var span = document.createElement("span");
               span.className = "catch-item";
-              span.textContent = icon;
+              span.textContent = item.icon;
               cell.el.appendChild(span);
-              cell.item = { bad: bad };
-              var life = Math.max(650, 1500 - s.level * 95);
-              cell.hideTimer = setTimeout(clearCell.bind(null, cell, "is-leaving"), life);
+              cell.item = item;
+              cell.hideTimer = setTimeout(expire.bind(null, cell), s.cfg.life * (item.star ? 0.85 : 1));
             }
-            var delay = Math.max(380, 900 - s.level * 60);
-            s.spawnTimer = setTimeout(spawn, delay * rand(0.8, 1.2));
+            s.spawnTimer = setTimeout(spawn, s.cfg.gap * rand(0.8, 1.2));
+          }
+
+          function loseLife(text, cell) {
+            s.lives = Math.max(0, s.lives - 1);
+            s.streak = 0;
+            renderThird();
+            renderCombo();
+            bump($("premios-time"));
+            flashHurt(stageEl);
+            sfx.miss();
+            var r = cell.el.getBoundingClientRect();
+            var st = stageEl.getBoundingClientRect();
+            floatText(stageEl, r.left - st.left + r.width / 2, r.top - st.top + r.height * 0.2, text, "is-bad");
+            if (s.lives <= 0) gameOver();
+          }
+
+          function gameOver() {
+            s.playing = false;
+            clearInterval(s.tick);
+            clearTimeout(s.spawnTimer);
+            s.endTimer = setTimeout(finish, 700);
+          }
+
+          function levelUp() {
+            var bonus = levelTime(s.level);
+            s.level += 1;
+            s.caught = 0;
+            s.cfg = levelCfg(s.level);
+            var msg = "¡Nivel " + s.level + "!";
+            if (s.mode === "libre") {
+              if (s.lives < MAX_LIVES) { s.lives += 1; renderThird(); bump($("premios-time")); }
+            } else {
+              s.timeLeft += bonus;
+              msg += " +" + bonus + "s";
+            }
+            floatText(stageEl, stageEl.clientWidth / 2, stageEl.clientHeight * 0.12, msg, "is-big");
+            bump($("premios-level"));
+            sfx.level();
           }
 
           function hit(cell) {
-            if (!s.playing || !cell.item) return;
-            var bad = cell.item.bad;
+            if (!s.playing || s.paused || !cell.item) return;
+            var item = cell.item;
             var r = cell.el.getBoundingClientRect();
-            var st = grid.parentNode.getBoundingClientRect();
+            var st = stageEl.getBoundingClientRect();
             var x = r.left - st.left + r.width / 2;
             var y = r.top - st.top + r.height * 0.2;
-            if (bad) {
-              s.score = Math.max(0, s.score - 15);
-              sfx.wrong();
-              floatText(grid.parentNode, x, y, "−15", "is-bad");
-              if (navigator.vibrate) navigator.vibrate(60);
-            } else {
-              s.score += 10;
-              sfx.pop();
-              floatText(grid.parentNode, x, y, "+10");
-            }
             clearCell(cell, "is-hit");
 
-            if (s.score >= s.level * 60 && s.level < 10) {
-              s.level += 1;
-              floatText(grid.parentNode, st.width / 2, st.height * 0.12, "¡Nivel " + s.level + "!", "is-big");
-              sfx.gold();
+            if (item.bad) {
+              s.score = Math.max(0, s.score - 15);
+              renderScore();
+              if (s.mode === "libre") {
+                loseLife("−15", cell);
+              } else {
+                s.streak = 0;
+                renderCombo();
+                sfx.wrong();
+                flashHurt(stageEl);
+                floatText(stageEl, x, y, "−15", "is-bad");
+              }
+              return;
             }
-            render();
+
+            s.streak += 1;
+            var m = mult();
+            var pts = item.pts * m;
+            s.score += pts;
+            s.total += 1;
+            s.caught += item.star ? 2 : 1;
+            floatText(stageEl, x, y, "+" + pts);
+            (item.star ? sfx.gold : sfx.pop)();
+            if (item.star) {
+              if (s.mode === "libre" && s.lives < MAX_LIVES) { s.lives += 1; renderThird(); }
+              else if (s.mode === "tiempo") { s.timeLeft += 3; }
+            }
+            if (s.caught >= s.cfg.need) levelUp();
+            renderScore();
+            renderProgress();
+            renderCombo();
+            renderThird();
           }
 
           cells.forEach(function (cell) {
@@ -2072,57 +2670,112 @@
             });
           });
 
+          /* ---------- Ciclo de la partida ---------- */
+          function startTick() {
+            clearInterval(s.tick);
+            if (s.mode !== "tiempo") return;
+            s.tick = setInterval(function () {
+              s.timeLeft -= 1;
+              renderThird();
+              if (s.timeLeft <= 0) finish();
+            }, 1000);
+          }
+
           function start() {
             stop();
             s.playing = true;
+            s.paused = false;
             s.score = 0;
             s.level = 1;
-            s.timeLeft = DURATION;
-            render();
+            s.caught = 0;
+            s.total = 0;
+            s.streak = 0;
+            s.shownMult = 1;
+            s.lives = MAX_LIVES;
+            s.timeLeft = BASE_TIME;
+            s.cfg = levelCfg(1);
+            s.recordShown = false;
+            s.prevBest = getRec(recKey()).score;
+            renderAll();
             $("premios-start").hidden = true;
-            s.tick = setInterval(function () {
-              s.timeLeft -= 1;
-              render();
-              if (s.timeLeft <= 0) finish();
-            }, 1000);
+            startTick();
             s.spawnTimer = setTimeout(spawn, 400);
           }
 
           function stop() {
             s.playing = false;
+            s.paused = false;
+            clearTimeout(s.endTimer);
             clearInterval(s.tick);
             clearTimeout(s.spawnTimer);
             cells.forEach(function (c) { clearCell(c); });
           }
 
           function finish() {
+            var timed = s.mode === "tiempo";
             stop();
-            render();
+            renderThird();
             showResult({
-              key: "premios",
-              icon: "🦴",
-              title: "¡Se terminó el tiempo!",
-              msg: "Sumaste " + s.score + " puntos y llegaste al nivel " + s.level + ".",
+              key: recKey(),
+              icon: timed ? "⏱️" : "🦴",
+              title: timed ? "¡Se terminó el tiempo!" : "¡Fin del juego!",
+              msg: "Llegaste al nivel " + s.level + " y atrapaste " + s.total + (s.total === 1 ? " premio." : " premios."),
+              stats: [{ label: "Puntos", value: s.score }, { label: "Nivel", value: s.level }],
               score: s.score,
+              level: s.level,
               retry: start
             });
+          }
+
+          /* ---------- Pantalla de inicio ---------- */
+          function renderStart() {
+            document.querySelectorAll("#premios-modes [data-mode]").forEach(function (b) {
+              b.setAttribute("aria-pressed", String(b.dataset.mode === s.mode));
+            });
+            $("premios-rules").textContent = RULES[s.mode];
+            $("premios-record").textContent = recordLine(recKey());
+            s.prevBest = getRec(recKey()).score;
+            s.recordShown = false;
+            renderAll();
           }
 
           function enter() {
             stop();
             s.score = 0;
             s.level = 1;
-            s.timeLeft = DURATION;
-            render();
+            s.caught = 0;
+            s.streak = 0;
+            s.lives = MAX_LIVES;
+            s.timeLeft = BASE_TIME;
+            s.cfg = levelCfg(1);
+            renderStart();
             $("premios-start").hidden = false;
           }
 
+          document.querySelectorAll("#premios-modes [data-mode]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              s.mode = btn.dataset.mode;
+              saveMode("premios", s.mode);
+              renderStart();
+            });
+          });
+
           $("premios-play").addEventListener("click", function () { warmUp(); start(); });
 
-          // Al cambiar de pestaña se corta la partida en vez de seguir
-          // contando sin que nadie juegue.
+          // Si se cambia de pestaña o se bloquea el celular, la partida se
+          // pausa y sigue al volver (sin castigar lo que se perdió mientras).
           document.addEventListener("visibilitychange", function () {
-            if (document.hidden && s.playing) enter();
+            if (!s.playing) return;
+            if (document.hidden && !s.paused) {
+              s.paused = true;
+              clearInterval(s.tick);
+              clearTimeout(s.spawnTimer);
+              cells.forEach(function (c) { clearCell(c); });
+            } else if (!document.hidden && s.paused) {
+              s.paused = false;
+              startTick();
+              s.spawnTimer = setTimeout(spawn, 800);
+            }
           });
 
           games.premios = { enter: enter, stop: stop };
