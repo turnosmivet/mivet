@@ -11,9 +11,18 @@
     <meta property="og:description" content="Bañá a una mascota, poné a prueba lo que sabés y atrapá premios mientras esperás tu turno." />
     <meta property="og:image" content="https://turnosmivet.github.io/mivet/logo/mivet-logo.jpg" />
 
-    <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/5ac3fe7c6abd2f62067f266d89671492?family=HelveticaNowDisplay-Medium" />
-    <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/1aa3377e489837a26d019bba501e779d?family=HelveticaNowDisplayW01-Rg" />
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
+    <meta name="theme-color" content="#faf7f2" />
+
+    <!-- Las fuentes se piden sin bloquear el primer pintado (media="print" y
+         se pasa a "all" al cargar): mientras llegan se ve la fuente de
+         reserva (font-display: swap ya viene en esas hojas). -->
+    <link rel="preconnect" href="https://db.onlinewebfonts.com" crossorigin />
+    <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/5ac3fe7c6abd2f62067f266d89671492?family=HelveticaNowDisplay-Medium" media="print" onload="this.media='all'" />
+    <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/1aa3377e489837a26d019bba501e779d?family=HelveticaNowDisplayW01-Rg" media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/5ac3fe7c6abd2f62067f266d89671492?family=HelveticaNowDisplay-Medium" />
+      <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/1aa3377e489837a26d019bba501e779d?family=HelveticaNowDisplayW01-Rg" />
+    </noscript>
     <style>
       :root {
         --font-heading: "HelveticaNowDisplay-Medium", "Helvetica Neue", Arial, sans-serif;
@@ -62,8 +71,7 @@
         gap: 1rem;
         padding: 0.85rem 1.25rem;
         padding-top: max(0.85rem, env(safe-area-inset-top));
-        background: #faf7f2e6;
-        backdrop-filter: blur(8px);
+        background: var(--mv-bg);
         border-bottom: 1px solid var(--mv-line);
         flex-shrink: 0;
       }
@@ -499,15 +507,7 @@
         transform-origin: 50% 100%;
       }
 
-      .bath-pet.is-wiggle { animation: petWiggle 0.28s ease; }
-
       .bath-scene.is-swapping .bath-pet { animation: petSwap 0.7s ease; }
-
-      @keyframes petWiggle {
-        0%, 100% { transform: rotate(0) scale(1); }
-        35% { transform: rotate(-2.5deg) scale(1.03, 0.97); }
-        70% { transform: rotate(2deg) scale(0.98, 1.02); }
-      }
 
       @keyframes petSwap {
         0% { transform: translateY(0); }
@@ -540,6 +540,7 @@
         position: absolute;
         inset: 0;
         z-index: 30;
+        contain: layout style paint;
       }
 
       .bubble {
@@ -567,13 +568,13 @@
         color: #5a4300;
       }
 
+      /* La escala va dentro de "transform" (lo pone el JS junto con la
+         posición). Con la propiedad "scale" suelta se aplicaría antes que la
+         traslación y la burbuja se iría deslizando hacia abajo al reventar. */
       .bubble.is-popping {
         pointer-events: none;
-        animation: bubblePop 0.2s ease-out forwards;
-      }
-
-      @keyframes bubblePop {
-        to { opacity: 0; scale: 1.45; }
+        opacity: 0;
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
       }
 
       .float-text {
@@ -830,8 +831,7 @@
         display: grid;
         place-items: center;
         padding: 1.25rem;
-        background: rgba(26, 26, 26, 0.45);
-        backdrop-filter: blur(4px);
+        background: rgba(26, 26, 26, 0.55);
       }
 
       .modal-card {
@@ -1161,6 +1161,8 @@
       </section>
     </main>
 
+    <canvas id="confetti-canvas" aria-hidden="true" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:70"></canvas>
+
     <!-- ================= MODAL DE RESULTADO ================= -->
     <div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-card">
@@ -1253,16 +1255,46 @@
           $("sound-off").hidden = soundOn;
         });
 
+        /* Confeti: la librería (5 KB) se baja recién al empezar a jugar y
+           dibuja en un worker (OffscreenCanvas) para no trabar la partida
+           cuando festeja en el medio del baño. Si no carga, se sigue sin él. */
+        var fireConfetti = null;
+        var confettiRequested = false;
+
+        function loadConfetti() {
+          if (confettiRequested) return;
+          confettiRequested = true;
+          var sc = document.createElement("script");
+          sc.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js";
+          sc.async = true;
+          sc.onload = function () {
+            try {
+              fireConfetti = confetti.create($("confetti-canvas"), { resize: true, useWorker: true, disableForReducedMotion: true });
+            } catch (e) {}
+          };
+          document.head.appendChild(sc);
+        }
+
         function burst(opts) {
-          if (typeof confetti !== "function") return;
+          if (!fireConfetti) return;
           try {
-            confetti(Object.assign({
-              particleCount: 80,
+            fireConfetti(Object.assign({
+              particleCount: 60,
               spread: 70,
               origin: { y: 0.6 },
-              colors: ["#e3a052", "#f5c518", "#5fb2d9", "#9b7bd4", "#ffffff"],
-              disableForReducedMotion: true
+              colors: ["#e3a052", "#f5c518", "#5fb2d9", "#9b7bd4", "#ffffff"]
             }, opts));
+          } catch (e) {}
+        }
+
+        // Crea/reanuda el audio y baja el confeti dentro de un toque del
+        // usuario, así el primer sonido no llega con retraso.
+        function warmUp() {
+          loadConfetti();
+          if (!soundOn) return;
+          try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === "suspended") audioCtx.resume();
           } catch (e) {}
         }
 
@@ -1313,7 +1345,7 @@
         $("topbar-back").addEventListener("click", goMenu);
         $("modal-menu").addEventListener("click", goMenu);
         document.querySelectorAll(".game-card").forEach(function (card) {
-          card.addEventListener("click", function () { enteredFromMenu = true; });
+          card.addEventListener("click", function () { enteredFromMenu = true; warmUp(); });
         });
         window.addEventListener("hashchange", function () {
           if (!location.hash.replace("#", "")) enteredFromMenu = false;
@@ -1450,21 +1482,43 @@
             layer.querySelectorAll(".float-text, .bubble").forEach(function (el) { el.remove(); });
           }
 
-          function spawn() {
+          // Medidas del escenario. Se leen del DOM una sola vez (y al
+          // cambiar el tamaño), no en cada burbuja: leer el layout justo
+          // después de modificar el DOM obliga al navegador a recalcularlo
+          // en el medio del toque y se nota como un tirón.
+          var geo = { W: 0, H: 0, base: 48, sceneLeft: 0, drawnW: 0, rimY: 0, sceneCx: 0, sceneTop: 0, sceneH: 0, vx: 0, vy: 0 };
+
+          function measure() {
             var W = stage.clientWidth;
-            var H = stage.clientHeight;
+            if (!W) return;
             var sr = scene.getBoundingClientRect();
             var st = stage.getBoundingClientRect();
             // El SVG usa "meet": el área real dibujada puede ser más angosta
             // que la caja del contenedor, así que se calcula a partir del alto.
             var drawnW = Math.min(sr.width, sr.height * (400 / 310));
-            var sceneLeft = sr.left - st.left + (sr.width - drawnW) / 2;
-            var rimY = sr.bottom - st.top - sr.height * (1 - 180 / 310);
+            geo.W = W;
+            geo.H = stage.clientHeight;
+            geo.base = clamp(W * 0.11, 48, 78);
+            geo.drawnW = drawnW;
+            geo.sceneLeft = sr.left - st.left + (sr.width - drawnW) / 2;
+            geo.sceneCx = sr.left - st.left + sr.width / 2;
+            geo.sceneTop = sr.top - st.top;
+            geo.sceneH = sr.height;
+            geo.rimY = sr.bottom - st.top - sr.height * (1 - 180 / 310);
+            geo.vx = st.left;
+            geo.vy = st.top;
+          }
+
+          if (window.ResizeObserver) new ResizeObserver(measure).observe(stage);
+
+          function spawn() {
+            var W = geo.W;
+            var H = geo.H;
+            var rimY = geo.rimY;
 
             var type = pickType();
-            var base = clamp(W * 0.11, 48, 78);
-            var size = base * (type.gold ? 0.82 : rand(0.9, 1.12));
-            var x = sceneLeft + drawnW * rand(0.1, 0.9) - size / 2;
+            var size = geo.base * (type.gold ? 0.82 : rand(0.9, 1.12));
+            var x = geo.sceneLeft + geo.drawnW * rand(0.1, 0.9) - size / 2;
             x = clamp(x, 4, W - size - 4);
 
             var progress = 1 - s.remaining / (s.duration * 1000);
@@ -1491,6 +1545,7 @@
 
           function place(b) {
             var x = b.x0 + Math.sin(b.t * b.freq + b.phase) * b.amp;
+            b.cx = x + b.size / 2;
             b.el.style.transform = "translate3d(" + x + "px," + b.y + "px,0)";
           }
 
@@ -1530,18 +1585,14 @@
             if (i === -1) return;
             s.bubbles.splice(i, 1);
             b.el.classList.add("is-popping");
+            b.el.style.transform = "translate3d(" + (b.cx - b.size / 2) + "px," + b.y + "px,0) scale(1.45)";
             setTimeout(function () { b.el.remove(); }, 220);
 
-            var r = b.el.getBoundingClientRect();
-            var st = stage.getBoundingClientRect();
-            floatText(layer, r.left - st.left + r.width / 2, r.top - st.top + r.height / 2, "+" + b.type.pts);
+            floatText(layer, b.cx, b.y + b.size / 2, "+" + b.type.pts);
 
             s.score += b.type.pts;
             (b.type.gold ? sfx.gold : sfx.pop)();
-
-            pet.classList.remove("is-wiggle");
-            void pet.getBBox();
-            pet.classList.add("is-wiggle");
+            wiggle();
 
             if (!s.celebrating) {
               s.clean += b.type.pts;
@@ -1549,6 +1600,21 @@
               if (s.clean >= CLEAN_TARGET) celebrate();
             }
             renderScore();
+          }
+
+          var wig = null;
+
+          // Sacudida del perro con la Web Animations API: se puede reiniciar
+          // en cada toque sin forzar un reflow (antes se hacía con getBBox).
+          function wiggle() {
+            if (s.celebrating || !pet.animate) return;
+            if (wig) wig.cancel();
+            wig = pet.animate([
+              { transform: "rotate(0) scale(1)" },
+              { transform: "rotate(-2.5deg) scale(1.03, 0.97)", offset: 0.35 },
+              { transform: "rotate(2deg) scale(0.98, 1.02)", offset: 0.7 },
+              { transform: "rotate(0) scale(1)" }
+            ], { duration: 280, easing: "ease" });
           }
 
           function celebrate() {
@@ -1559,15 +1625,13 @@
             scene.querySelector("svg").classList.add("is-happy");
             sfx.win();
 
-            var sr = scene.getBoundingClientRect();
-            var st = stage.getBoundingClientRect();
-            floatText(layer, sr.left - st.left + sr.width / 2, sr.top - st.top + sr.height * 0.12, "¡Impecable! +50", "is-big");
+            floatText(layer, geo.sceneCx, geo.sceneTop + geo.sceneH * 0.12, "¡Impecable! +50", "is-big");
             burst({
-              particleCount: 50,
+              particleCount: 40,
               spread: 60,
               origin: {
-                x: (sr.left + sr.width / 2) / window.innerWidth,
-                y: (sr.top + sr.height * 0.35) / window.innerHeight
+                x: (geo.vx + geo.sceneCx) / window.innerWidth,
+                y: (geo.vy + geo.sceneTop + geo.sceneH * 0.35) / window.innerHeight
               }
             });
 
@@ -1597,6 +1661,7 @@
 
           function start() {
             clearBubbles();
+            measure();
             s.playing = true;
             s.paused = false;
             s.score = 0;
@@ -1660,7 +1725,7 @@
             });
           });
 
-          $("bano-play").addEventListener("click", start);
+          $("bano-play").addEventListener("click", function () { warmUp(); start(); });
 
           // Si se cambia de pestaña o se bloquea el celular, el tiempo no
           // sigue corriendo.
@@ -2052,7 +2117,7 @@
             $("premios-start").hidden = false;
           }
 
-          $("premios-play").addEventListener("click", start);
+          $("premios-play").addEventListener("click", function () { warmUp(); start(); });
 
           // Al cambiar de pestaña se corta la partida en vez de seguir
           // contando sin que nadie juegue.
