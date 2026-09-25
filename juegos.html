@@ -1,0 +1,2071 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/mivet/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>MiVet — Juegos</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://turnosmivet.github.io/mivet/juegos.html" />
+    <meta property="og:title" content="MiVet — Juegos para la sala de espera" />
+    <meta property="og:description" content="Bañá a una mascota, poné a prueba lo que sabés y atrapá premios mientras esperás tu turno." />
+    <meta property="og:image" content="https://turnosmivet.github.io/mivet/logo/mivet-logo.jpg" />
+
+    <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/5ac3fe7c6abd2f62067f266d89671492?family=HelveticaNowDisplay-Medium" />
+    <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/1aa3377e489837a26d019bba501e779d?family=HelveticaNowDisplayW01-Rg" />
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
+    <style>
+      :root {
+        --font-heading: "HelveticaNowDisplay-Medium", "Helvetica Neue", Arial, sans-serif;
+        --font-body: "HelveticaNowDisplayW01-Rg", "Helvetica Neue", Arial, sans-serif;
+        --mv-accent: #e3a052;
+        --mv-ink: #1a1a1a;
+        --mv-muted: #6b6b6b;
+        --mv-bg: #faf7f2;
+        --mv-card: #ffffff;
+        --mv-line: rgba(0, 0, 0, 0.08);
+        --mv-good: #2f9e6a;
+        --mv-bad: #d4513d;
+        --g-bano: #5fb2d9;
+        --g-trivia: #9b7bd4;
+        --g-premio: #e3a052;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body { height: 100%; }
+
+      body {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+        font-family: var(--font-body);
+        background: var(--mv-bg);
+        color: var(--mv-ink);
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button { font: inherit; color: inherit; }
+
+      [hidden] { display: none !important; }
+
+      /* ---------- Barra superior (mismo lenguaje que turnos.html) ---------- */
+      .mv-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.85rem 1.25rem;
+        padding-top: max(0.85rem, env(safe-area-inset-top));
+        background: #faf7f2e6;
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--mv-line);
+        flex-shrink: 0;
+      }
+
+      .mv-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-width: 5.5rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: var(--mv-ink);
+        text-decoration: none;
+      }
+
+      .mv-back::before {
+        content: "←";
+        transition: transform 0.2s ease;
+      }
+
+      .mv-back:hover::before { transform: translateX(-3px); }
+
+      .mv-logo {
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+      }
+
+      .mv-logo span { color: var(--mv-accent); }
+
+      .mv-icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        justify-self: end;
+        width: 2.5rem;
+        height: 2.5rem;
+        margin-left: auto;
+        border: 1px solid var(--mv-line);
+        border-radius: 999px;
+        background: var(--mv-card);
+        cursor: pointer;
+      }
+
+      .mv-icon-btn svg { width: 1.15rem; height: 1.15rem; }
+
+      .mv-topbar-end {
+        display: flex;
+        justify-content: flex-end;
+        min-width: 5.5rem;
+      }
+
+      /* ---------- Contenedor de vistas ---------- */
+      main {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .view { height: 100%; }
+
+      .mv-container {
+        max-width: 64rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 3rem;
+      }
+
+      .mv-kicker {
+        display: block;
+        margin: 0 auto 0.75rem;
+        width: fit-content;
+        padding: 0.3rem 0.8rem;
+        border-radius: 999px;
+        background: #f3e3cc;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .mv-heading {
+        margin: 0 0 0.6rem;
+        font-family: var(--font-heading);
+        font-weight: 500;
+        font-size: 1.7rem;
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+        text-align: center;
+      }
+
+      .mv-subheading {
+        margin: 0 auto 2rem;
+        max-width: 32rem;
+        font-size: 0.95rem;
+        color: var(--mv-muted);
+        text-align: center;
+      }
+
+      @media (min-width: 768px) {
+        .mv-container { padding: 3.5rem 2.5rem 4rem; }
+        .mv-heading { font-size: 2.4rem; }
+        .mv-subheading { font-size: 1.05rem; margin-bottom: 3rem; }
+      }
+
+      /* ---------- Menú de juegos ---------- */
+      .game-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      @media (min-width: 768px) {
+        .game-grid { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+      }
+
+      .game-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+        padding: 1rem;
+        border: 1px solid var(--mv-line);
+        border-radius: 1.5rem;
+        background: var(--mv-card);
+        text-align: left;
+        text-decoration: none;
+        color: inherit;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      @media (min-width: 768px) {
+        .game-card {
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 1.5rem;
+        }
+      }
+
+      @media (hover: hover) {
+        .game-card:hover {
+          transform: translateY(-3px);
+          border-color: var(--card-color);
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.1);
+        }
+      }
+
+      .game-card:active { transform: scale(0.98); }
+
+      .game-card:focus-visible {
+        outline: 2px solid var(--mv-ink);
+        outline-offset: 3px;
+      }
+
+      .game-card-icon {
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        width: 4rem;
+        height: 4rem;
+        border-radius: 1.1rem;
+        background: color-mix(in srgb, var(--card-color) 18%, white);
+        font-size: 2rem;
+      }
+
+      @media (min-width: 768px) {
+        .game-card-icon { width: 5rem; height: 5rem; font-size: 2.6rem; }
+      }
+
+      .game-card h2 {
+        margin: 0 0 0.25rem;
+        font-family: var(--font-heading);
+        font-weight: 500;
+        font-size: 1.2rem;
+      }
+
+      .game-card p {
+        margin: 0;
+        font-size: 0.88rem;
+        line-height: 1.4;
+        color: var(--mv-muted);
+      }
+
+      .game-card-cta {
+        display: none;
+        margin-top: auto;
+        padding-top: 1rem;
+        font-family: var(--font-heading);
+        font-size: 0.95rem;
+        color: var(--mv-ink);
+      }
+
+      @media (min-width: 768px) {
+        .game-card-cta { display: inline-flex; gap: 0.4rem; }
+      }
+
+      .game-card-best {
+        display: block;
+        margin-top: 0.35rem;
+        font-size: 0.78rem;
+        color: var(--mv-ink);
+        opacity: 0.7;
+      }
+
+      /* ---------- Layout común de un juego ---------- */
+      .game-view {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        height: 100%;
+        max-width: 56rem;
+        margin: 0 auto;
+        padding: 0.75rem 1rem;
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
+
+      @media (min-width: 768px) {
+        .game-view { padding: 1.25rem 2rem 1.5rem; gap: 1rem; }
+      }
+
+      .hud {
+        display: flex;
+        align-items: stretch;
+        gap: 0.5rem;
+        flex-shrink: 0;
+      }
+
+      .hud-item {
+        flex: 1;
+        min-width: 0;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--mv-line);
+        border-radius: 1rem;
+        background: var(--mv-card);
+      }
+
+      .hud-label {
+        display: block;
+        font-size: 0.68rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--mv-muted);
+      }
+
+      .hud-value {
+        display: block;
+        font-family: var(--font-heading);
+        font-size: 1.35rem;
+        line-height: 1.2;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      .hud-value.is-urgent { color: var(--mv-bad); }
+
+      @media (min-width: 768px) {
+        .hud-item { padding: 0.7rem 1rem; }
+        .hud-value { font-size: 1.6rem; }
+      }
+
+      .meter {
+        position: relative;
+        height: 0.5rem;
+        margin-top: 0.45rem;
+        border-radius: 999px;
+        background: #eee7dc;
+        overflow: hidden;
+      }
+
+      .meter-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0%;
+        border-radius: inherit;
+        background: var(--meter-color, var(--mv-accent));
+        transition: width 0.25s ease;
+      }
+
+      .game-hint {
+        flex-shrink: 0;
+        margin: 0;
+        font-size: 0.82rem;
+        color: var(--mv-muted);
+        text-align: center;
+      }
+
+      /* ---------- Botones ---------- */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.95rem 1.6rem;
+        border: none;
+        border-radius: 999px;
+        background: var(--mv-accent);
+        color: var(--mv-ink);
+        font-family: var(--font-heading);
+        font-weight: 500;
+        font-size: 1.1rem;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 6px 16px rgba(227, 160, 82, 0.35);
+        transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+      }
+
+      @media (hover: hover) {
+        .btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 22px rgba(227, 160, 82, 0.45);
+          filter: brightness(1.04);
+        }
+      }
+
+      .btn:active { transform: scale(0.98); }
+
+      .btn:focus-visible { outline: 2px solid var(--mv-ink); outline-offset: 3px; }
+
+      .btn-ghost {
+        background: var(--mv-card);
+        border: 1px solid var(--mv-line);
+        box-shadow: none;
+      }
+
+      @media (hover: hover) {
+        .btn-ghost:hover { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); }
+      }
+
+      .pill-group {
+        display: inline-flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        border-radius: 999px;
+        background: #f1ebe1;
+      }
+
+      .pill {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 999px;
+        background: transparent;
+        font-family: var(--font-heading);
+        font-size: 0.95rem;
+        cursor: pointer;
+      }
+
+      .pill[aria-pressed="true"] {
+        background: var(--mv-card);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* ---------- Tarjeta de inicio sobre el escenario ---------- */
+      .stage-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+        background: rgba(250, 247, 242, 0.55);
+        backdrop-filter: blur(3px);
+      }
+
+      .start-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.9rem;
+        max-width: 22rem;
+        padding: 1.5rem 1.25rem;
+        border-radius: 1.5rem;
+        background: var(--mv-card);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        text-align: center;
+      }
+
+      .start-card h2 {
+        margin: 0;
+        font-family: var(--font-heading);
+        font-weight: 500;
+        font-size: 1.4rem;
+      }
+
+      .start-card p {
+        margin: 0;
+        font-size: 0.92rem;
+        line-height: 1.45;
+        color: var(--mv-muted);
+      }
+
+      .start-card .btn { width: 100%; }
+
+      /* ---------- Juego 1: El baño ---------- */
+      .bath-stage {
+        position: relative;
+        flex: 1;
+        min-height: 18rem;
+        overflow: hidden;
+        border-radius: 1.5rem;
+        border: 1px solid var(--mv-line);
+        /* Azulejos de baño + piso */
+        background:
+          linear-gradient(to top, #d9c7ae 0 11%, transparent 11%),
+          linear-gradient(to top, #cbb698 0 11.6%, transparent 11.6%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.55) 2px, transparent 2px) 0 0 / 3.25rem 3.25rem,
+          linear-gradient(rgba(255, 255, 255, 0.55) 2px, transparent 2px) 0 0 / 3.25rem 3.25rem,
+          linear-gradient(#cfe9f5, #b7dcee);
+        touch-action: none;
+      }
+
+      .bath-scene {
+        position: absolute;
+        left: 50%;
+        bottom: 3%;
+        width: min(92%, 34rem);
+        max-height: 82%;
+        aspect-ratio: 400 / 310;
+        transform: translateX(-50%);
+        pointer-events: none;
+      }
+
+      .bath-scene svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+
+      .bath-pet {
+        transform-box: fill-box;
+        transform-origin: 50% 100%;
+      }
+
+      .bath-pet.is-wiggle { animation: petWiggle 0.28s ease; }
+
+      .bath-scene.is-swapping .bath-pet { animation: petSwap 0.7s ease; }
+
+      @keyframes petWiggle {
+        0%, 100% { transform: rotate(0) scale(1); }
+        35% { transform: rotate(-2.5deg) scale(1.03, 0.97); }
+        70% { transform: rotate(2deg) scale(0.98, 1.02); }
+      }
+
+      @keyframes petSwap {
+        0% { transform: translateY(0); }
+        45% { transform: translateY(70%); }
+        55% { transform: translateY(70%); }
+        100% { transform: translateY(0); }
+      }
+
+      .dirt ellipse,
+      .dirt circle {
+        transform-box: fill-box;
+        transform-origin: center;
+        transition: opacity 0.35s ease, transform 0.35s ease;
+      }
+
+      .dirt .is-clean { opacity: 0; transform: scale(0.2); }
+
+      .eyes-happy, .sparkles { opacity: 0; transition: opacity 0.2s ease; }
+      .is-happy .eyes-open { opacity: 0; }
+      .is-happy .eyes-happy, .is-happy .sparkles { opacity: 1; }
+      .sparkles path { transform-box: fill-box; transform-origin: center; }
+      .is-happy .sparkles path { animation: twinkle 0.6s ease-in-out infinite alternate; }
+
+      @keyframes twinkle {
+        from { transform: scale(0.6) rotate(0); }
+        to { transform: scale(1.15) rotate(20deg); }
+      }
+
+      .bubble-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 30;
+      }
+
+      .bubble {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.95) 0 12%, rgba(255, 255, 255, 0) 13%),
+          radial-gradient(circle at 50% 50%, rgba(var(--tint), 0.15) 0 55%, rgba(var(--tint), 0.55) 100%);
+        border: 2px solid rgba(255, 255, 255, 0.85);
+        box-shadow: inset -4px -6px 12px rgba(var(--tint), 0.45), 0 4px 10px rgba(0, 0, 0, 0.08);
+        color: #1f3b4d;
+        font-family: var(--font-heading);
+        font-size: var(--label-size, 0.8rem);
+        cursor: pointer;
+        will-change: transform;
+      }
+
+      .bubble.is-gold {
+        border-color: #fff4c2;
+        box-shadow: inset -4px -6px 12px rgba(var(--tint), 0.6), 0 0 16px rgba(245, 197, 24, 0.55);
+        color: #5a4300;
+      }
+
+      .bubble.is-popping {
+        pointer-events: none;
+        animation: bubblePop 0.2s ease-out forwards;
+      }
+
+      @keyframes bubblePop {
+        to { opacity: 0; scale: 1.45; }
+      }
+
+      .float-text {
+        position: absolute;
+        z-index: 35;
+        font-family: var(--font-heading);
+        font-size: 1.05rem;
+        color: var(--mv-ink);
+        text-shadow: 0 1px 0 #fff, 0 0 6px #fff;
+        white-space: nowrap;
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        animation: floatText 0.8s ease-out forwards;
+      }
+
+      .float-text.is-big { font-size: 1.5rem; color: #1f7a52; }
+      .float-text.is-bad { color: var(--mv-bad); }
+
+      @keyframes floatText {
+        from { opacity: 1; translate: 0 0; }
+        to { opacity: 0; translate: 0 -2.5rem; }
+      }
+
+      /* ---------- Juego 2: Trivia ---------- */
+      .trivia-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        max-width: 42rem;
+        margin: 0 auto;
+        padding: 1.25rem;
+        border: 1px solid var(--mv-line);
+        border-radius: 1.5rem;
+        background: var(--mv-card);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      @media (min-width: 768px) {
+        .trivia-card { padding: 2rem; }
+      }
+
+      .trivia-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        font-size: 0.85rem;
+        color: var(--mv-muted);
+      }
+
+      .trivia-top strong {
+        font-family: var(--font-heading);
+        font-weight: 500;
+        font-size: 1.1rem;
+        color: var(--mv-ink);
+      }
+
+      .trivia-card .meter { --meter-color: var(--g-trivia); margin-top: 0; }
+
+      .trivia-cat {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--g-trivia);
+      }
+
+      .trivia-q {
+        margin: 0.25rem 0 0;
+        font-family: var(--font-heading);
+        font-weight: 500;
+        font-size: 1.25rem;
+        line-height: 1.3;
+      }
+
+      @media (min-width: 768px) {
+        .trivia-q { font-size: 1.6rem; }
+      }
+
+      .trivia-opts {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+      }
+
+      @media (min-width: 640px) {
+        .trivia-opts { grid-template-columns: 1fr 1fr; }
+      }
+
+      .trivia-opt {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        min-height: 3.5rem;
+        padding: 0.8rem 1rem;
+        border: 1.5px solid var(--mv-line);
+        border-radius: 1rem;
+        background: var(--mv-card);
+        font-size: 0.98rem;
+        line-height: 1.3;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+      }
+
+      .trivia-opt-key {
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        width: 1.8rem;
+        height: 1.8rem;
+        border-radius: 50%;
+        background: #f1ebe1;
+        font-family: var(--font-heading);
+        font-size: 0.85rem;
+      }
+
+      @media (hover: hover) {
+        .trivia-opt:not(:disabled):hover {
+          border-color: var(--g-trivia);
+          background: #f7f2fd;
+        }
+      }
+
+      .trivia-opt:not(:disabled):active { transform: scale(0.98); }
+      .trivia-opt:disabled { cursor: default; }
+      .trivia-opt.is-dim { opacity: 0.5; }
+
+      .trivia-opt.is-right {
+        border-color: var(--mv-good);
+        background: #e9f6ef;
+      }
+
+      .trivia-opt.is-right .trivia-opt-key { background: var(--mv-good); color: #fff; }
+
+      .trivia-opt.is-wrong {
+        border-color: var(--mv-bad);
+        background: #fbecea;
+      }
+
+      .trivia-opt.is-wrong .trivia-opt-key { background: var(--mv-bad); color: #fff; }
+
+      .trivia-exp {
+        padding: 0.9rem 1rem;
+        border-radius: 1rem;
+        background: #fbf3e6;
+        font-size: 0.92rem;
+        line-height: 1.5;
+      }
+
+      .trivia-exp strong { font-family: var(--font-heading); font-weight: 500; }
+
+      .trivia-next { align-self: flex-end; }
+
+      /* ---------- Juego 3: Atrapá el premio ---------- */
+      .catch-stage {
+        position: relative;
+        flex: 1;
+        min-height: 18rem;
+        display: grid;
+        place-items: center;
+        border-radius: 1.5rem;
+        border: 1px solid var(--mv-line);
+        background:
+          radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.6), transparent 40%),
+          linear-gradient(#bfe3a7, #9fd08a);
+        overflow: hidden;
+        touch-action: manipulation;
+      }
+
+      .catch-stage { container-type: size; }
+
+      /* Cuadrado que entra siempre en el escenario, sea vertical (mobile)
+         u horizontal (desktop). */
+      .catch-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        gap: 0.5rem;
+        width: min(92cqw, 86cqh, 30rem);
+        height: min(92cqw, 86cqh, 30rem);
+      }
+
+      .catch-cell {
+        position: relative;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: none;
+        background: none;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+
+      /* El pozo: una elipse chata abajo de la celda, de la que "asoma" el ítem */
+      .catch-cell::before {
+        content: "";
+        position: absolute;
+        left: 10%;
+        right: 10%;
+        bottom: 12%;
+        height: 30%;
+        border-radius: 50%;
+        background: radial-gradient(ellipse at 50% 40%, #4a3220 0 55%, #6b4a2f 56% 100%);
+        box-shadow: 0 3px 0 rgba(255, 255, 255, 0.35);
+      }
+
+      .catch-cell:focus-visible { outline: 2px solid var(--mv-ink); outline-offset: -4px; border-radius: 1rem; }
+
+      .catch-item {
+        position: relative;
+        margin-bottom: 22%;
+        font-size: min(13cqw, 11cqh, 3.6rem);
+        line-height: 1;
+        filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.2));
+        animation: itemUp 0.18s ease-out;
+      }
+
+      .catch-item.is-leaving { animation: itemDown 0.18s ease-in forwards; }
+      .catch-item.is-hit { animation: itemHit 0.22s ease-out forwards; }
+
+      @keyframes itemUp {
+        from { transform: translateY(40%) scale(0.4); opacity: 0; }
+        to { transform: none; opacity: 1; }
+      }
+
+      @keyframes itemDown {
+        to { transform: translateY(40%) scale(0.4); opacity: 0; }
+      }
+
+      @keyframes itemHit {
+        to { transform: scale(1.5); opacity: 0; }
+      }
+
+      .catch-legend {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.25rem;
+        flex-shrink: 0;
+        font-size: 0.85rem;
+      }
+
+      .catch-legend span { white-space: nowrap; }
+      .catch-legend .good { color: #1f7a52; }
+      .catch-legend .bad { color: var(--mv-bad); }
+
+      /* ---------- Modal de resultado ---------- */
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: grid;
+        place-items: center;
+        padding: 1.25rem;
+        background: rgba(26, 26, 26, 0.45);
+        backdrop-filter: blur(4px);
+      }
+
+      .modal-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        max-width: 24rem;
+        padding: 1.75rem 1.5rem 1.5rem;
+        border-radius: 1.75rem;
+        background: var(--mv-card);
+        text-align: center;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+        animation: modalIn 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+      }
+
+      @keyframes modalIn {
+        from { transform: translateY(20px) scale(0.95); opacity: 0; }
+        to { transform: none; opacity: 1; }
+      }
+
+      .modal-icon { font-size: 3rem; line-height: 1; }
+
+      .modal-card h2 {
+        margin: 0;
+        font-family: var(--font-heading);
+        font-weight: 500;
+        font-size: 1.5rem;
+      }
+
+      .modal-card p {
+        margin: 0;
+        color: var(--mv-muted);
+        line-height: 1.45;
+      }
+
+      .modal-record {
+        font-size: 0.85rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 999px;
+        background: #fbf3e6;
+      }
+
+      .modal-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+
+      .modal-actions .btn { width: 100%; }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="mv-topbar">
+      <a class="mv-back" id="topbar-back" href="/mivet/turnos.html">Volver</a>
+      <span class="mv-logo">mivet <span>juegos</span></span>
+      <div class="mv-topbar-end">
+        <button class="mv-icon-btn" id="sound-btn" type="button" aria-label="Silenciar sonido" aria-pressed="true">
+          <svg id="sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+            <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+          </svg>
+          <svg id="sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+            <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+            <path d="m16 9.5 5 5M21 9.5l-5 5" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- ================= MENÚ ================= -->
+      <section class="view" id="view-menu">
+        <div class="mv-container">
+          <span class="mv-kicker">Sala de espera</span>
+          <h1 class="mv-heading">¿A qué jugamos?</h1>
+          <p class="mv-subheading">Tres juegos cortitos para pasar el rato mientras esperás tu turno.</p>
+
+          <div class="game-grid">
+            <a class="game-card" href="#bano" style="--card-color: var(--g-bano)">
+              <span class="game-card-icon" aria-hidden="true">🛁</span>
+              <span>
+                <h2>El baño peludo</h2>
+                <p>Reventá las burbujas para dejar impecable a cada mascota.</p>
+                <span class="game-card-best" data-best="bano" hidden></span>
+              </span>
+              <span class="game-card-cta">Jugar →</span>
+            </a>
+
+            <a class="game-card" href="#trivia" style="--card-color: var(--g-trivia)">
+              <span class="game-card-icon" aria-hidden="true">🧠</span>
+              <span>
+                <h2>Trivia peluda</h2>
+                <p>100 preguntas sobre cuidado animal, en tandas de 20. ¿Cuánto sabés?</p>
+                <span class="game-card-best" data-best="trivia" hidden></span>
+              </span>
+              <span class="game-card-cta">Jugar →</span>
+            </a>
+
+            <a class="game-card" href="#premios" style="--card-color: var(--g-premio)">
+              <span class="game-card-icon" aria-hidden="true">🦴</span>
+              <span>
+                <h2>Atrapá el premio</h2>
+                <p>Agarrá los premios sanos y esquivá los alimentos tóxicos.</p>
+                <span class="game-card-best" data-best="premios" hidden></span>
+              </span>
+              <span class="game-card-cta">Jugar →</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= JUEGO 1: EL BAÑO ================= -->
+      <section class="view" id="view-bano" hidden>
+        <div class="game-view">
+          <div class="hud">
+            <div class="hud-item">
+              <span class="hud-label">Puntos</span>
+              <span class="hud-value" id="bano-score">0</span>
+            </div>
+            <div class="hud-item">
+              <span class="hud-label">Tiempo</span>
+              <span class="hud-value" id="bano-time">1:00</span>
+            </div>
+            <div class="hud-item">
+              <span class="hud-label">Limpieza</span>
+              <span class="hud-value"><span id="bano-clean">0</span>%<small id="bano-washed" style="font-size:0.75rem;margin-left:0.4rem" hidden></small></span>
+              <div class="meter" style="--meter-color: var(--g-bano)"><div class="meter-fill" id="bano-meter"></div></div>
+            </div>
+          </div>
+
+          <div class="bath-stage" id="bath-stage">
+            <div class="bath-scene" id="bath-scene">
+              <svg viewBox="0 0 400 310" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                <defs>
+                  <linearGradient id="tubFront" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#ffffff" />
+                    <stop offset="1" stop-color="#dfe7ec" />
+                  </linearGradient>
+                </defs>
+
+                <!-- Interior de la bañera (atrás) -->
+                <ellipse cx="200" cy="182" rx="168" ry="20" fill="#9fcde4" />
+
+                <!-- Mascota -->
+                <g class="bath-pet" id="bath-pet" style="--fur:#d9924a; --fur-dark:#8a5122; --muzzle:#fbe7c8">
+                  <!-- Cuerpo -->
+                  <ellipse cx="200" cy="200" rx="72" ry="48" fill="var(--fur)" />
+                  <!-- Orejas -->
+                  <path d="M152 80 C118 74 100 120 114 162 C121 180 146 172 150 146 Z" fill="var(--fur-dark)" />
+                  <path d="M248 80 C282 74 300 120 286 162 C279 180 254 172 250 146 Z" fill="var(--fur-dark)" />
+                  <!-- Cabeza -->
+                  <ellipse cx="200" cy="116" rx="60" ry="55" fill="var(--fur)" />
+                  <!-- Hocico -->
+                  <ellipse cx="200" cy="140" rx="29" ry="21" fill="var(--muzzle)" />
+                  <ellipse cx="200" cy="128" rx="10.5" ry="7.5" fill="#2a211c" />
+                  <ellipse cx="197" cy="126" rx="3" ry="1.8" fill="#fff" opacity="0.6" />
+                  <path d="M200 135 v5 M200 140 q-7 7 -13 2 M200 140 q7 7 13 2" stroke="#2a211c" stroke-width="2.2" fill="none" stroke-linecap="round" />
+                  <path d="M195 145 q5 11 10 0 z" fill="#ee6b7d" />
+                  <!-- Cachetes -->
+                  <ellipse cx="160" cy="134" rx="9" ry="5.5" fill="#f28b8b" opacity="0.35" />
+                  <ellipse cx="240" cy="134" rx="9" ry="5.5" fill="#f28b8b" opacity="0.35" />
+                  <!-- Ojos -->
+                  <g class="eyes-open">
+                    <circle cx="176" cy="108" r="7.5" fill="#2a211c" />
+                    <circle cx="224" cy="108" r="7.5" fill="#2a211c" />
+                    <circle cx="178.5" cy="105.5" r="2.6" fill="#fff" />
+                    <circle cx="226.5" cy="105.5" r="2.6" fill="#fff" />
+                  </g>
+                  <g class="eyes-happy" stroke="#2a211c" stroke-width="3" fill="none" stroke-linecap="round">
+                    <path d="M168 110 q8 -9 16 0" />
+                    <path d="M216 110 q8 -9 16 0" />
+                  </g>
+                  <!-- Manchas de barro (se van limpiando) -->
+                  <g class="dirt" fill="#7a5634">
+                    <ellipse cx="170" cy="78" rx="11" ry="8" opacity="0.85" />
+                    <ellipse cx="236" cy="88" rx="9" ry="6.5" opacity="0.8" />
+                    <ellipse cx="124" cy="138" rx="8" ry="11" opacity="0.8" />
+                    <ellipse cx="277" cy="130" rx="7" ry="10" opacity="0.8" />
+                    <ellipse cx="248" cy="148" rx="7.5" ry="5.5" opacity="0.75" />
+                    <ellipse cx="156" cy="152" rx="6.5" ry="5" opacity="0.75" />
+                    <circle cx="210" cy="76" r="4.5" opacity="0.7" />
+                    <circle cx="190" cy="94" r="3.8" opacity="0.7" />
+                    <circle cx="140" cy="115" r="4" opacity="0.7" />
+                    <circle cx="262" cy="108" r="3.5" opacity="0.7" />
+                  </g>
+                  <!-- Espuma sobre la cabeza -->
+                  <g fill="#fff">
+                    <circle cx="186" cy="64" r="12" opacity="0.95" />
+                    <circle cx="202" cy="58" r="15" />
+                    <circle cx="219" cy="65" r="11" opacity="0.95" />
+                    <circle cx="196" cy="46" r="7" opacity="0.9" />
+                  </g>
+                </g>
+
+                <!-- Espuma sobre el agua -->
+                <g fill="#fff">
+                  <circle cx="62" cy="178" r="13" />
+                  <circle cx="84" cy="172" r="16" />
+                  <circle cx="108" cy="178" r="12" />
+                  <circle cx="292" cy="178" r="12" />
+                  <circle cx="316" cy="171" r="16" />
+                  <circle cx="340" cy="178" r="13" />
+                  <circle cx="200" cy="184" r="14" opacity="0.95" />
+                  <circle cx="176" cy="186" r="10" opacity="0.95" />
+                  <circle cx="224" cy="186" r="10" opacity="0.95" />
+                </g>
+
+                <!-- Frente de la bañera -->
+                <path d="M34 186 H366 V232 Q366 286 312 286 H88 Q34 286 34 232 Z" fill="url(#tubFront)" stroke="#c9d4db" stroke-width="2" />
+                <path d="M60 204 H300" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity="0.9" />
+                <rect x="24" y="176" width="352" height="16" rx="8" fill="#f7fafb" stroke="#c9d4db" stroke-width="2" />
+                <text x="200" y="252" text-anchor="middle" font-family="HelveticaNowDisplay-Medium, Helvetica Neue, Arial, sans-serif" font-size="20" fill="#e3a052">mivet</text>
+                <!-- Patas de la bañera -->
+                <path d="M82 284 h26 l-4 18 q-9 6 -18 0 z" fill="#e3a052" />
+                <path d="M292 284 h26 l-4 18 q-9 6 -18 0 z" fill="#e3a052" />
+
+                <!-- Patitas apoyadas en el borde -->
+                <g id="bath-paws" style="--fur:#d9924a">
+                  <ellipse cx="150" cy="180" rx="19" ry="11" fill="var(--fur)" />
+                  <ellipse cx="250" cy="180" rx="19" ry="11" fill="var(--fur)" />
+                  <path d="M143 176 v7 M150 175 v8 M157 176 v7 M243 176 v7 M250 175 v8 M257 176 v7" stroke="rgba(0,0,0,0.25)" stroke-width="1.8" stroke-linecap="round" />
+                </g>
+
+                <!-- Brillitos al quedar limpio -->
+                <g class="sparkles" fill="#f5c518">
+                  <path d="M120 60 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4z" />
+                  <path d="M290 50 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z" />
+                  <path d="M300 118 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" />
+                  <path d="M96 120 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" />
+                </g>
+              </svg>
+            </div>
+
+            <div class="bubble-layer" id="bubble-layer"></div>
+
+            <div class="stage-overlay" id="bano-start">
+              <div class="start-card">
+                <h2>El baño peludo</h2>
+                <p>Tocá las burbujas antes de que se escapen. Cada una limpia un poco: cuando la mascota queda impecable, llega la siguiente.</p>
+                <div class="pill-group" role="group" aria-label="Duración">
+                  <button type="button" class="pill" data-duration="60" aria-pressed="true">1 min</button>
+                  <button type="button" class="pill" data-duration="180" aria-pressed="false">3 min</button>
+                  <button type="button" class="pill" data-duration="300" aria-pressed="false">5 min</button>
+                </div>
+                <button type="button" class="btn" id="bano-play">¡A bañar!</button>
+              </div>
+            </div>
+          </div>
+
+          <p class="game-hint">Las burbujas doradas valen más. 🫧</p>
+        </div>
+      </section>
+
+      <!-- ================= JUEGO 2: TRIVIA ================= -->
+      <section class="view" id="view-trivia" hidden>
+        <div class="game-view" style="justify-content: center">
+          <div class="trivia-card">
+            <div class="trivia-top">
+              <span id="trivia-progress">Tanda 1 de 5 · Pregunta 1 de 20</span>
+              <strong id="trivia-score">0 pts</strong>
+            </div>
+            <div class="meter"><div class="meter-fill" id="trivia-meter"></div></div>
+
+            <div>
+              <span class="trivia-cat" id="trivia-cat"></span>
+              <h2 class="trivia-q" id="trivia-q"></h2>
+            </div>
+
+            <div class="trivia-opts" id="trivia-opts"></div>
+
+            <div class="trivia-exp" id="trivia-exp" hidden>
+              <strong id="trivia-verdict"></strong>
+              <span id="trivia-exp-text"></span>
+            </div>
+
+            <button type="button" class="btn trivia-next" id="trivia-next" hidden>Siguiente →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= JUEGO 3: ATRAPÁ EL PREMIO ================= -->
+      <section class="view" id="view-premios" hidden>
+        <div class="game-view">
+          <div class="hud">
+            <div class="hud-item">
+              <span class="hud-label">Puntos</span>
+              <span class="hud-value" id="premios-score">0</span>
+            </div>
+            <div class="hud-item">
+              <span class="hud-label">Tiempo</span>
+              <span class="hud-value" id="premios-time">30s</span>
+            </div>
+            <div class="hud-item">
+              <span class="hud-label">Nivel</span>
+              <span class="hud-value" id="premios-level">1</span>
+            </div>
+          </div>
+
+          <div class="catch-stage">
+            <div class="catch-grid" id="catch-grid"></div>
+
+            <div class="stage-overlay" id="premios-start">
+              <div class="start-card">
+                <h2>Atrapá el premio</h2>
+                <p>Tocá los premios sanos cuando asomen. ¡Cuidado con los alimentos tóxicos para mascotas: restan puntos!</p>
+                <button type="button" class="btn" id="premios-play">¡Empezar!</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="catch-legend">
+            <span class="good">🦴 🥩 🐟 🥕 &nbsp;Sanos +10</span>
+            <span class="bad">🍫 🍇 🧅 🧦 &nbsp;¡Evitalos! −15</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ================= MODAL DE RESULTADO ================= -->
+    <div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-card">
+        <div class="modal-icon" id="modal-icon">🏆</div>
+        <h2 id="modal-title">¡Buen trabajo!</h2>
+        <p id="modal-msg"></p>
+        <span class="modal-record" id="modal-record" hidden></span>
+        <div class="modal-actions">
+          <button type="button" class="btn" id="modal-retry">Jugar de nuevo</button>
+          <a class="btn btn-ghost" href="#" id="modal-menu">Otros juegos</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var $ = function (id) { return document.getElementById(id); };
+        var rand = function (a, b) { return a + Math.random() * (b - a); };
+        var pick = function (arr) { return arr[Math.floor(Math.random() * arr.length)]; };
+        var clamp = function (v, a, b) { return Math.min(b, Math.max(a, v)); };
+
+        function shuffle(arr) {
+          var a = arr.slice();
+          for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = a[i]; a[i] = a[j]; a[j] = t;
+          }
+          return a;
+        }
+
+        /* ---------------- Récords (solo en este navegador) ---------------- */
+        function getBest(key) {
+          try { return parseInt(localStorage.getItem("mivet-juegos-" + key), 10) || 0; } catch (e) { return 0; }
+        }
+
+        // Guarda el puntaje si supera el récord. Devuelve true si es nuevo récord.
+        function saveBest(key, score) {
+          var prev = getBest(key);
+          if (score <= prev) return false;
+          try { localStorage.setItem("mivet-juegos-" + key, String(score)); } catch (e) {}
+          return true;
+        }
+
+        function renderBests() {
+          document.querySelectorAll("[data-best]").forEach(function (el) {
+            var best = getBest(el.dataset.best);
+            el.hidden = !best;
+            el.textContent = "Tu récord: " + best + " pts";
+          });
+        }
+
+        /* ---------------- Sonido (Web Audio, sin archivos) ---------------- */
+        var audioCtx = null;
+        var soundOn = true;
+
+        function tone(freqs, dur, type, vol) {
+          if (!soundOn) return;
+          try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === "suspended") audioCtx.resume();
+            var now = audioCtx.currentTime;
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.type = type || "sine";
+            freqs.forEach(function (f, i) {
+              osc.frequency.setValueAtTime(f, now + (i * dur) / freqs.length);
+            });
+            gain.gain.setValueAtTime(vol || 0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + dur);
+          } catch (e) {}
+        }
+
+        var sfx = {
+          pop: function () { tone([520 + Math.random() * 180, 900], 0.09, "sine", 0.16); },
+          gold: function () { tone([660, 990, 1320], 0.18, "triangle", 0.14); },
+          right: function () { tone([523, 659, 784], 0.3, "triangle", 0.16); },
+          wrong: function () { tone([220, 170], 0.25, "square", 0.07); },
+          win: function () { tone([523, 659, 784, 1047], 0.55, "triangle", 0.16); }
+        };
+
+        $("sound-btn").addEventListener("click", function () {
+          soundOn = !soundOn;
+          this.setAttribute("aria-pressed", String(soundOn));
+          this.setAttribute("aria-label", soundOn ? "Silenciar sonido" : "Activar sonido");
+          $("sound-on").hidden = !soundOn;
+          $("sound-off").hidden = soundOn;
+        });
+
+        function burst(opts) {
+          if (typeof confetti !== "function") return;
+          try {
+            confetti(Object.assign({
+              particleCount: 80,
+              spread: 70,
+              origin: { y: 0.6 },
+              colors: ["#e3a052", "#f5c518", "#5fb2d9", "#9b7bd4", "#ffffff"],
+              disableForReducedMotion: true
+            }, opts));
+          } catch (e) {}
+        }
+
+        /* ---------------- Router por hash ----------------
+           Cada juego tiene su #hash para que el botón "atrás" del celular
+           vuelva al menú en vez de salir de la página. */
+        var games = {};
+        var currentView = null;
+
+        function route() {
+          var key = location.hash.replace("#", "");
+          if (!games[key]) key = "";
+
+          if (currentView && games[currentView] && games[currentView].stop) games[currentView].stop();
+          $("modal").hidden = true;
+
+          document.querySelectorAll(".view").forEach(function (v) { v.hidden = true; });
+          $(key ? "view-" + key : "view-menu").hidden = false;
+          document.querySelector("main").scrollTop = 0;
+
+          var back = $("topbar-back");
+          if (key) {
+            back.textContent = "Juegos";
+            back.href = "#";
+          } else {
+            back.textContent = "Volver";
+            back.href = "/mivet/turnos.html";
+            renderBests();
+          }
+
+          currentView = key;
+          if (key && games[key].enter) games[key].enter();
+        }
+
+        // "Juegos"/"Otros juegos": si se entró al juego desde el menú, se
+        // vuelve atrás en el historial (así el botón atrás del celular no
+        // queda apuntando a un juego ya cerrado); si se entró directo con
+        // un link a #bano, etc., se cambia el hash.
+        var enteredFromMenu = false;
+
+        function goMenu(e) {
+          if (!currentView) return;
+          e.preventDefault();
+          if (enteredFromMenu) history.back();
+          else location.hash = "";
+        }
+
+        $("topbar-back").addEventListener("click", goMenu);
+        $("modal-menu").addEventListener("click", goMenu);
+        document.querySelectorAll(".game-card").forEach(function (card) {
+          card.addEventListener("click", function () { enteredFromMenu = true; });
+        });
+        window.addEventListener("hashchange", function () {
+          if (!location.hash.replace("#", "")) enteredFromMenu = false;
+        });
+
+        /* ---------------- Modal de resultado ---------------- */
+        var retryFn = null;
+
+        function showResult(o) {
+          $("modal-icon").textContent = o.icon;
+          $("modal-title").textContent = o.title;
+          $("modal-msg").textContent = o.msg;
+          var isRecord = saveBest(o.key, o.score);
+          var best = getBest(o.key);
+          $("modal-record").hidden = !best;
+          $("modal-record").textContent = isRecord ? "🎉 ¡Nuevo récord!" : "Tu récord: " + best + " pts";
+          retryFn = o.retry;
+          $("modal-retry").textContent = o.retryLabel || "Jugar de nuevo";
+          $("modal").hidden = false;
+          sfx.win();
+          burst({});
+          $("modal-retry").focus();
+        }
+
+        $("modal-retry").addEventListener("click", function () {
+          $("modal").hidden = true;
+          if (retryFn) retryFn();
+        });
+
+        function floatText(layer, x, y, text, cls) {
+          var el = document.createElement("span");
+          el.className = "float-text" + (cls ? " " + cls : "");
+          el.textContent = text;
+          el.style.left = x + "px";
+          el.style.top = y + "px";
+          layer.appendChild(el);
+          setTimeout(function () { el.remove(); }, 850);
+        }
+
+        function fmtTime(s) {
+          s = Math.max(0, Math.ceil(s));
+          return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+        }
+
+        /* =====================================================
+           JUEGO 1 — EL BAÑO PELUDO
+           ===================================================== */
+        (function () {
+          var stage = $("bath-stage");
+          var scene = $("bath-scene");
+          var layer = $("bubble-layer");
+          var pet = $("bath-pet");
+          var paws = $("bath-paws");
+          var spots = Array.prototype.slice.call(scene.querySelectorAll(".dirt > *"));
+
+          // Puntos de burbuja necesarios para dejar limpia a una mascota.
+          var CLEAN_TARGET = 180;
+
+          var FURS = [
+            { fur: "#d9924a", dark: "#8a5122", muzzle: "#fbe7c8" },
+            { fur: "#a9b1ba", dark: "#5f6973", muzzle: "#f1f3f5" },
+            { fur: "#f1dfc0", dark: "#c29a62", muzzle: "#fff9ef" },
+            { fur: "#b95e32", dark: "#6e3014", muzzle: "#f6dcc4" },
+            { fur: "#e6c79a", dark: "#4a3a2c", muzzle: "#fff4e2" }
+          ];
+
+          var TYPES = [
+            { pts: 10, tint: "110,190,230", w: 50 },
+            { pts: 15, tint: "240,150,195", w: 28 },
+            { pts: 20, tint: "175,140,235", w: 15 },
+            { pts: 30, tint: "245,197,24", w: 7, gold: true }
+          ];
+          var TYPE_WEIGHT = TYPES.reduce(function (s, t) { return s + t.w; }, 0);
+
+          var s = {
+            duration: 60, playing: false, paused: false,
+            endAt: 0, remaining: 0, score: 0, clean: 0, washed: 0,
+            furIdx: 0, celebrating: false, bubbles: [],
+            raf: 0, last: 0, spawnAcc: 0, shownSec: -1
+          };
+
+          function pickType() {
+            var r = Math.random() * TYPE_WEIGHT;
+            for (var i = 0; i < TYPES.length; i++) {
+              r -= TYPES[i].w;
+              if (r <= 0) return TYPES[i];
+            }
+            return TYPES[0];
+          }
+
+          function setFur(idx) {
+            var f = FURS[idx % FURS.length];
+            [pet, paws].forEach(function (g) {
+              g.style.setProperty("--fur", f.fur);
+              g.style.setProperty("--fur-dark", f.dark);
+              g.style.setProperty("--muzzle", f.muzzle);
+            });
+          }
+
+          function renderClean() {
+            var c = clamp(s.clean / CLEAN_TARGET, 0, 1);
+            var pct = Math.round(c * 100);
+            $("bano-clean").textContent = pct;
+            $("bano-meter").style.width = pct + "%";
+            var visible = Math.ceil(spots.length * (1 - c));
+            spots.forEach(function (sp, i) { sp.classList.toggle("is-clean", i >= visible); });
+          }
+
+          function renderScore() {
+            $("bano-score").textContent = s.score;
+            var w = $("bano-washed");
+            w.hidden = !s.washed;
+            w.textContent = "· " + s.washed + " 🐶";
+          }
+
+          function renderTime(secLeft) {
+            var sec = Math.ceil(secLeft);
+            if (sec === s.shownSec) return;
+            s.shownSec = sec;
+            var el = $("bano-time");
+            el.textContent = fmtTime(sec);
+            el.classList.toggle("is-urgent", sec <= 10);
+          }
+
+          function resetPet() {
+            s.clean = 0;
+            scene.querySelector("svg").classList.remove("is-happy");
+            renderClean();
+          }
+
+          function clearBubbles() {
+            s.bubbles.forEach(function (b) { b.el.remove(); });
+            s.bubbles = [];
+            layer.querySelectorAll(".float-text, .bubble").forEach(function (el) { el.remove(); });
+          }
+
+          function spawn() {
+            var W = stage.clientWidth;
+            var H = stage.clientHeight;
+            var sr = scene.getBoundingClientRect();
+            var st = stage.getBoundingClientRect();
+            // El SVG usa "meet": el área real dibujada puede ser más angosta
+            // que la caja del contenedor, así que se calcula a partir del alto.
+            var drawnW = Math.min(sr.width, sr.height * (400 / 310));
+            var sceneLeft = sr.left - st.left + (sr.width - drawnW) / 2;
+            var rimY = sr.bottom - st.top - sr.height * (1 - 180 / 310);
+
+            var type = pickType();
+            var base = clamp(W * 0.11, 48, 78);
+            var size = base * (type.gold ? 0.82 : rand(0.9, 1.12));
+            var x = sceneLeft + drawnW * rand(0.1, 0.9) - size / 2;
+            x = clamp(x, 4, W - size - 4);
+
+            var progress = 1 - s.remaining / (s.duration * 1000);
+            var travel = rand(4.2, 5.8) / (1 + progress * 0.45) / (type.gold ? 1.35 : 1);
+
+            var el = document.createElement("div");
+            el.className = "bubble" + (type.gold ? " is-gold" : "");
+            el.style.width = el.style.height = size + "px";
+            el.style.setProperty("--tint", type.tint);
+            el.style.setProperty("--label-size", Math.max(12, size * 0.26) + "px");
+            el.textContent = "+" + type.pts;
+            layer.appendChild(el);
+
+            var b = {
+              el: el, type: type, size: size, x0: x,
+              y: rimY - size * 0.6,
+              speed: H / travel,
+              amp: rand(6, 20), freq: rand(1.2, 2.4), phase: rand(0, 6.28), t: 0
+            };
+            el._bubble = b;
+            s.bubbles.push(b);
+            place(b);
+          }
+
+          function place(b) {
+            var x = b.x0 + Math.sin(b.t * b.freq + b.phase) * b.amp;
+            b.el.style.transform = "translate3d(" + x + "px," + b.y + "px,0)";
+          }
+
+          function loop(now) {
+            if (!s.playing || s.paused) return;
+            var dt = Math.min(0.05, (now - s.last) / 1000);
+            s.last = now;
+
+            s.remaining = s.endAt - performance.now();
+            renderTime(s.remaining / 1000);
+            if (s.remaining <= 0) { finish(); return; }
+
+            var progress = 1 - s.remaining / (s.duration * 1000);
+            var interval = 0.72 - progress * 0.3;
+            s.spawnAcc += dt;
+            if (s.spawnAcc >= interval) {
+              s.spawnAcc = 0;
+              if (s.bubbles.length < 14) spawn();
+            }
+
+            for (var i = s.bubbles.length - 1; i >= 0; i--) {
+              var b = s.bubbles[i];
+              b.t += dt;
+              b.y -= b.speed * dt;
+              if (b.y < -b.size) {
+                b.el.remove();
+                s.bubbles.splice(i, 1);
+              } else {
+                place(b);
+              }
+            }
+            s.raf = requestAnimationFrame(loop);
+          }
+
+          function pop(b) {
+            var i = s.bubbles.indexOf(b);
+            if (i === -1) return;
+            s.bubbles.splice(i, 1);
+            b.el.classList.add("is-popping");
+            setTimeout(function () { b.el.remove(); }, 220);
+
+            var r = b.el.getBoundingClientRect();
+            var st = stage.getBoundingClientRect();
+            floatText(layer, r.left - st.left + r.width / 2, r.top - st.top + r.height / 2, "+" + b.type.pts);
+
+            s.score += b.type.pts;
+            (b.type.gold ? sfx.gold : sfx.pop)();
+
+            pet.classList.remove("is-wiggle");
+            void pet.getBBox();
+            pet.classList.add("is-wiggle");
+
+            if (!s.celebrating) {
+              s.clean += b.type.pts;
+              renderClean();
+              if (s.clean >= CLEAN_TARGET) celebrate();
+            }
+            renderScore();
+          }
+
+          function celebrate() {
+            s.celebrating = true;
+            s.washed += 1;
+            s.score += 50;
+            renderScore();
+            scene.querySelector("svg").classList.add("is-happy");
+            sfx.win();
+
+            var sr = scene.getBoundingClientRect();
+            var st = stage.getBoundingClientRect();
+            floatText(layer, sr.left - st.left + sr.width / 2, sr.top - st.top + sr.height * 0.12, "¡Impecable! +50", "is-big");
+            burst({
+              particleCount: 50,
+              spread: 60,
+              origin: {
+                x: (sr.left + sr.width / 2) / window.innerWidth,
+                y: (sr.top + sr.height * 0.35) / window.innerHeight
+              }
+            });
+
+            setTimeout(function () {
+              if (!s.playing) return;
+              scene.classList.add("is-swapping");
+              // A mitad de la animación (mascota escondida en la bañera) se
+              // cambia el pelaje y vuelve el barro.
+              setTimeout(function () {
+                s.furIdx += 1;
+                setFur(s.furIdx);
+                resetPet();
+              }, 320);
+              setTimeout(function () {
+                scene.classList.remove("is-swapping");
+                s.celebrating = false;
+              }, 700);
+            }, 1100);
+          }
+
+          layer.addEventListener("pointerdown", function (e) {
+            var el = e.target.closest(".bubble");
+            if (!el || !s.playing || s.paused) return;
+            e.preventDefault();
+            pop(el._bubble);
+          });
+
+          function start() {
+            clearBubbles();
+            s.playing = true;
+            s.paused = false;
+            s.score = 0;
+            s.washed = 0;
+            s.celebrating = false;
+            s.furIdx = Math.floor(Math.random() * FURS.length);
+            s.shownSec = -1;
+            s.spawnAcc = 0.5;
+            s.remaining = s.duration * 1000;
+            s.endAt = performance.now() + s.remaining;
+            s.last = performance.now();
+            scene.classList.remove("is-swapping");
+            setFur(s.furIdx);
+            resetPet();
+            renderScore();
+            $("bano-start").hidden = true;
+            s.raf = requestAnimationFrame(loop);
+          }
+
+          function stop() {
+            s.playing = false;
+            cancelAnimationFrame(s.raf);
+            clearBubbles();
+          }
+
+          function finish() {
+            stop();
+            showResult({
+              key: "bano",
+              icon: "🧼",
+              title: "¡Terminó el baño!",
+              msg: s.washed
+                ? "Dejaste impecables a " + s.washed + (s.washed === 1 ? " mascota" : " mascotas") + " y sumaste " + s.score + " puntos."
+                : "Sumaste " + s.score + " puntos. ¡La próxima seguro la dejás impecable!",
+              score: s.score,
+              retry: start
+            });
+          }
+
+          function enter() {
+            stop();
+            s.furIdx = Math.floor(Math.random() * FURS.length);
+            setFur(s.furIdx);
+            resetPet();
+            s.score = 0;
+            s.washed = 0;
+            renderScore();
+            s.shownSec = -1;
+            renderTime(s.duration);
+            $("bano-start").hidden = false;
+          }
+
+          document.querySelectorAll("#bano-start [data-duration]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              s.duration = parseInt(btn.dataset.duration, 10);
+              document.querySelectorAll("#bano-start [data-duration]").forEach(function (b) {
+                b.setAttribute("aria-pressed", String(b === btn));
+              });
+              s.shownSec = -1;
+              renderTime(s.duration);
+            });
+          });
+
+          $("bano-play").addEventListener("click", start);
+
+          // Si se cambia de pestaña o se bloquea el celular, el tiempo no
+          // sigue corriendo.
+          document.addEventListener("visibilitychange", function () {
+            if (!s.playing) return;
+            if (document.hidden) {
+              s.paused = true;
+              s.remaining = s.endAt - performance.now();
+              cancelAnimationFrame(s.raf);
+            } else if (s.paused) {
+              s.paused = false;
+              s.endAt = performance.now() + s.remaining;
+              s.last = performance.now();
+              s.raf = requestAnimationFrame(loop);
+            }
+          });
+
+          games.bano = { enter: enter, stop: stop };
+        })();
+
+        /* =====================================================
+           JUEGO 2 — TRIVIA PELUDA
+           ===================================================== */
+        (function () {
+          // 100 preguntas en tandas de 20. El orden se mezcla una vez y se
+          // recorre tanda por tanda, así no se repiten preguntas hasta haber
+          // pasado por las 100; después se vuelve a mezclar.
+          var PER_ROUND = 20;
+          var DECK_KEY = "mivet-juegos-trivia-mazo";
+          var PTS = 20;
+
+          // La primera opción de cada pregunta es la correcta; se mezclan al mostrar.
+          var QUESTIONS = [
+            { cat: "Alimentación", q: "¿Qué alimento es tóxico para los perros y nunca hay que darles?", opts: ["Chocolate", "Manzana sin semillas", "Zanahoria", "Arroz cocido"], exp: "El chocolate tiene teobromina, que los perros eliminan muy lento. Aunque sea poquito, puede intoxicarlos." },
+            { cat: "Salud", q: "¿Cuál es la temperatura normal de un perro o gato sano?", opts: ["Entre 38 y 39,2 °C", "Entre 36 y 37 °C", "Entre 40 y 41,5 °C", "Entre 35 y 36 °C"], exp: "Su temperatura es más alta que la nuestra: lo normal está entre 38 y 39,2 °C." },
+            { cat: "Comportamiento", q: "¿Por qué los gatos se lamen tanto el pelo?", opts: ["Para higienizarse y regular su temperatura", "Porque tienen sed", "Para afilarse las uñas", "Porque se aburren siempre"], exp: "Al evaporarse, la saliva los refresca. Además se sacan el pelo muerto y mantienen la piel sana." },
+            { cat: "Alimentación", q: "¿Qué verdura es un buen premio, bajo en calorías, para perros?", opts: ["Zanahoria", "Cebolla", "Ajo", "Puerro"], exp: "La zanahoria tiene fibra y vitamina A, y al masticarla ayuda a limpiar los dientes." },
+            { cat: "Prevención", q: "¿Cada cuánto conviene hacer un control veterinario preventivo?", opts: ["Al menos una vez al año", "Solo cuando se enferma", "Cada 5 años", "Nunca, si vive adentro"], exp: "El control anual permite detectar problemas a tiempo y mantener al día vacunas y desparasitaciones." },
+            { cat: "Alimentación", q: "¿Cuál de estas frutas puede dañar los riñones de un perro?", opts: ["Uvas y pasas", "Banana", "Sandía sin semillas", "Arándanos"], exp: "Las uvas y las pasas pueden causar una falla renal aguda en perros, incluso en pequeñas cantidades." },
+            { cat: "Curiosidades", q: "¿Cuántos dientes tiene un perro adulto?", opts: ["42", "28", "32", "50"], exp: "Los perros adultos tienen 42 dientes; los gatos adultos, 30." },
+            { cat: "Alimentación", q: "¿Los gatos adultos toleran bien la leche de vaca?", opts: ["No, muchos son intolerantes a la lactosa", "Sí, es su bebida ideal", "Sí, pero solo fría", "Solo si es descremada"], exp: "Muchos gatos adultos no digieren bien la lactosa y la leche les puede dar diarrea. Lo mejor es agua fresca." },
+            { cat: "Hogar seguro", q: "¿Qué planta es muy peligrosa para los gatos?", opts: ["El lirio", "El pasto gatero", "La albahaca", "La hierba de trigo"], exp: "Todas las partes del lirio son tóxicas para los gatos: hasta el polen puede afectar sus riñones." },
+            { cat: "Curiosidades", q: "¿Cuántas horas por día duerme, más o menos, un gato adulto?", opts: ["Entre 12 y 16 horas", "Entre 4 y 6 horas", "Unas 8 horas", "Casi nunca duerme"], exp: "Los gatos duermen mucho: entre 12 y 16 horas por día, y los cachorros todavía más." },
+            { cat: "Prevención", q: "¿Para qué sirve el microchip en una mascota?", opts: ["Para identificarla si se pierde", "Para rastrearla por GPS", "Para medirle la temperatura", "Para que no ladre"], exp: "El microchip guarda un código que se lee con un escáner y permite encontrar a su familia. No es un GPS." },
+            { cat: "Prevención", q: "¿Qué vacuna es obligatoria por ley en Argentina para perros y gatos?", opts: ["La antirrábica", "La de la tos de las perreras", "La de la gripe", "Ninguna"], exp: "La vacuna antirrábica es obligatoria y se aplica una vez por año." },
+            { cat: "Hogar seguro", q: "¿Cuánto tiempo es seguro dejar a un perro en el auto al sol con la ventanilla entreabierta?", opts: ["Nunca es seguro", "Hasta 30 minutos", "Una hora", "Mientras tenga agua"], exp: "Adentro de un auto la temperatura sube muy rápido y un golpe de calor puede ser grave en pocos minutos." },
+            { cat: "Curiosidades", q: "¿Cómo se refrescan principalmente los perros?", opts: ["Jadeando", "Sudando por todo el cuerpo", "Moviendo la cola", "Tomando sol"], exp: "Los perros casi no sudan: se refrescan jadeando y un poco por las almohadillas de las patas." },
+            { cat: "Alimentación", q: "¿La cebolla y el ajo son seguros para perros y gatos?", opts: ["No, pueden causar anemia", "Sí, en cualquier cantidad", "Solo si están cocidos", "Solo para gatos"], exp: "La cebolla y el ajo, crudos o cocidos, dañan los glóbulos rojos y pueden causar anemia." },
+            { cat: "Alimentación", q: "¿Por qué no conviene darle huesos cocidos a un perro?", opts: ["Porque se astillan y pueden lastimarlo", "Porque no tienen gusto", "Porque engordan mucho", "No hay problema en dárselos"], exp: "Al cocinarse los huesos se vuelven quebradizos y las astillas pueden lastimar la boca o el intestino." },
+            { cat: "Comportamiento", q: "Cuando un perro mueve la cola, ¿siempre está contento?", opts: ["No, también puede estar nervioso o alerta", "Sí, siempre", "Solo si la mueve rápido", "Significa que tiene hambre"], exp: "Mover la cola indica que está excitado o atento. Para entenderlo hay que mirar todo su cuerpo." },
+            { cat: "Salud", q: "¿Qué ayuda más a cuidar los dientes de una mascota?", opts: ["Cepillarlos con pasta para mascotas", "Darle azúcar", "Usar pasta dental humana", "No hace falta cuidarlos"], exp: "El cepillado regular con pasta veterinaria previene sarro y enfermedad de encías. La pasta humana no es apta." },
+            { cat: "Alimentación", q: "¿Qué endulzante, presente en chicles y golosinas sin azúcar, es muy peligroso para los perros?", opts: ["El xilitol", "El azúcar común", "La miel", "La stevia"], exp: "El xilitol provoca una baja brusca del azúcar en sangre y puede dañar el hígado del perro. Revisá las etiquetas." },
+            { cat: "Alimentación", q: "¿Por qué es peligroso el carozo de la palta para un perro?", opts: ["Porque puede trabarse en el intestino", "Porque es muy dulce", "Porque le mancha los dientes", "No es peligroso"], exp: "El carozo es grande y duro: si lo traga, puede obstruir el esófago o el intestino y requerir cirugía." },
+            { cat: "Hogar seguro", q: "¿Qué medicamento humano muy común es altamente tóxico para los gatos?", opts: ["El paracetamol", "Ninguno, todos son seguros", "El agua oxigenada tomada", "Las vitaminas para chicos"], exp: "Los gatos no pueden procesar el paracetamol: aun una dosis chica puede ser mortal. Nunca los mediques sin indicación veterinaria." },
+            { cat: "Hogar seguro", q: "¿Se le puede dar ibuprofeno a un perro que tiene dolor?", opts: ["No, puede causarle úlceras y daño renal", "Sí, media pastilla está bien", "Sí, si es un perro grande", "Solo con comida"], exp: "El ibuprofeno es tóxico para los perros. Hay analgésicos veterinarios seguros: consultá antes de darle cualquier remedio." },
+            { cat: "Curiosidades", q: "¿Para qué usan los gatos los bigotes?", opts: ["Para percibir el entorno y medir espacios", "Solo de adorno", "Para oler mejor", "Para equilibrar el peso de la cabeza"], exp: "Los bigotes son pelos táctiles muy sensibles: detectan corrientes de aire y les ayudan a saber si entran por un hueco. ¡Nunca hay que cortarlos!" },
+            { cat: "Curiosidades", q: "¿Cuánto más desarrollado es el olfato de un perro que el nuestro, aproximadamente?", opts: ["Entre 10.000 y 100.000 veces", "El doble", "Unas 10 veces", "Es igual al nuestro"], exp: "Los perros tienen cientos de millones de receptores olfativos. Por eso pueden detectar drogas, enfermedades o personas perdidas." },
+            { cat: "Curiosidades", q: "¿Por qué los gatos ven tan bien con poca luz?", opts: ["Tienen una capa en el ojo que refleja la luz", "Porque tienen visión infrarroja", "Porque tienen ojos más grandes que los nuestros", "En realidad no ven bien de noche"], exp: "Detrás de la retina tienen el tapetum lucidum, que aprovecha la poca luz. Es lo que hace que sus ojos brillen en la oscuridad." },
+            { cat: "Curiosidades", q: "¿Los perros ven en blanco y negro?", opts: ["No, ven algunos colores, sobre todo azules y amarillos", "Sí, solo en blanco y negro", "Ven todos los colores igual que nosotros", "Solo ven el rojo"], exp: "Los perros tienen dos tipos de conos: distinguen bien azules y amarillos, pero confunden rojos y verdes." },
+            { cat: "Curiosidades", q: "¿Cuánto dura aproximadamente el embarazo de una perra?", opts: ["Unos 2 meses", "9 meses", "Unas 2 semanas", "6 meses"], exp: "La gestación de las perras dura alrededor de 63 días, parecido a la de las gatas." },
+            { cat: "Curiosidades", q: "¿Qué parte del cuerpo de un perro es única, como nuestra huella digital?", opts: ["La nariz", "La cola", "Las orejas", "Las uñas"], exp: "El dibujo de la trufa (la nariz) es único en cada perro, igual que nuestras huellas digitales." },
+            { cat: "Hogar seguro", q: "¿Un gato puede lastimarse si se cae de un balcón?", opts: ["Sí, puede sufrir lesiones graves", "No, siempre cae parado", "Solo si es cachorro", "Solo desde más de 10 pisos"], exp: "Aunque tienen un gran reflejo para girar en el aire, las caídas causan fracturas y golpes graves. Lo mejor es poner redes en balcones y ventanas." },
+            { cat: "Prevención", q: "¿Qué beneficio tiene castrar a una mascota?", opts: ["Reduce el riesgo de ciertos tumores y evita camadas no deseadas", "La vuelve más agresiva", "No tiene ningún beneficio", "Hace que viva menos"], exp: "La castración previene enfermedades del aparato reproductor, reduce tumores mamarios y ayuda a controlar la sobrepoblación." },
+            { cat: "Prevención", q: "¿Un perro que vive adentro de casa necesita desparasitarse?", opts: ["Sí, también puede contagiarse parásitos", "No, nunca", "Solo si sale al jardín", "Solo si tiene pulgas"], exp: "Los parásitos pueden llegar por la ropa, los zapatos, otras mascotas o insectos. La desparasitación periódica protege a toda la familia." },
+            { cat: "Prevención", q: "Cuando una mascota se traga una pulga, ¿qué parásito puede contagiarse?", opts: ["Una tenia (parásito intestinal)", "La sarna", "Un hongo en la piel", "Ninguno"], exp: "Las pulgas pueden llevar larvas de tenia. Por eso el control de pulgas y la desparasitación interna van de la mano." },
+            { cat: "Prevención", q: "¿Qué conviene hacer después de pasear a tu perro por pasto alto?", opts: ["Revisarle el pelaje en busca de garrapatas", "Bañarlo con lavandina", "Nada, no hace falta", "Cortarle el pelo al ras"], exp: "Las garrapatas se esconden en orejas, cuello y entre los dedos. Sacarlas a tiempo evita enfermedades que pueden transmitir." },
+            { cat: "Salud", q: "¿Cómo se contagia la leptospirosis?", opts: ["Por agua o barro contaminados con orina de animales infectados", "Por comer demasiado", "Por el frío", "Por mirar a otro perro"], exp: "La transmiten sobre todo las ratas. Afecta a perros y personas, y hay vacuna para prevenirla." },
+            { cat: "Salud", q: "¿Qué es una zoonosis?", opts: ["Una enfermedad que se transmite entre animales y personas", "Un tipo de zoológico", "Una vacuna", "Un alimento balanceado"], exp: "La rabia, la leptospirosis y algunos parásitos son zoonosis. Cuidar la salud de las mascotas también cuida la nuestra." },
+            { cat: "Prevención", q: "¿Cuál es la mejor forma de prevenir el moquillo en los perros?", opts: ["Vacunarlos", "Abrigarlos en invierno", "Darles vitaminas", "Bañarlos seguido"], exp: "El moquillo es una enfermedad viral grave y contagiosa. La vacuna es la forma más efectiva de prevenirla." },
+            { cat: "Salud", q: "¿A quiénes afecta con más gravedad el parvovirus?", opts: ["A los cachorros sin sus vacunas completas", "A los gatos adultos", "A las personas", "A los perros ancianos vacunados"], exp: "El parvovirus causa vómitos y diarrea graves en cachorros. Por eso es clave completar el plan de vacunación." },
+            { cat: "Prevención", q: "¿Cuándo puede salir a pasear por la calle un cachorro?", opts: ["Cuando el veterinario indique que completó sus vacunas", "Apenas llega a casa", "Recién al año", "Nunca antes de los 2 años"], exp: "Hasta completar sus vacunas es vulnerable a virus que hay en la calle. Mientras tanto se puede socializar en lugares seguros." },
+            { cat: "Salud", q: "¿Cuál de estas es una señal de golpe de calor en un perro?", opts: ["Jadeo excesivo y encías muy rojas", "Ganas de jugar", "Hambre", "Que mueva la cola"], exp: "Ante un golpe de calor hay que llevarlo a la sombra, mojarlo con agua fresca (no helada) e ir al veterinario de inmediato." },
+            { cat: "Hogar seguro", q: "¿Cómo podés saber si el asfalto está demasiado caliente para las patas de tu perro?", opts: ["Si no aguantás 5 segundos el dorso de la mano apoyado", "Si está de color gris", "Mirando el reloj", "Las almohadillas nunca se queman"], exp: "El asfalto al sol puede quemar las almohadillas. En verano conviene pasear temprano a la mañana o a la noche." },
+            { cat: "Salud", q: "¿Qué razas sufren más el calor por tener el hocico corto?", opts: ["Bulldog y pug", "Galgo y dálmata", "Ovejero alemán y husky", "Todas por igual"], exp: "Las razas braquicéfalas respiran con más dificultad y les cuesta refrescarse jadeando. Hay que cuidarlas mucho en verano." },
+            { cat: "Cuidados básicos", q: "¿Cada cuánto hay que cambiar el agua del bebedero?", opts: ["Todos los días, lavando el recipiente", "Una vez por semana", "Cuando se termina", "Una vez por mes"], exp: "El agua estancada junta bacterias y suciedad. Agua fresca y limpia todos los días ayuda a que tomen lo suficiente." },
+            { cat: "Gatos", q: "¿Cuántas bandejas sanitarias se recomiendan en una casa con gatos?", opts: ["Una por gato, más una extra", "Una sola para todos", "Una cada tres gatos", "No hace falta ninguna"], exp: "Tener suficientes bandejas evita conflictos entre gatos y que hagan sus necesidades fuera de lugar." },
+            { cat: "Gatos", q: "¿Cada cuánto conviene sacar lo sucio de la bandeja sanitaria?", opts: ["Todos los días", "Una vez por mes", "Cuando empieza a oler", "Nunca, se cambia todo junto"], exp: "Los gatos son muy limpios: si la bandeja está sucia, pueden dejar de usarla." },
+            { cat: "Gatos", q: "¿Por qué los gatos rasguñan los muebles?", opts: ["Para marcar territorio, estirarse y cuidar sus uñas", "Para molestar a sus dueños", "Porque tienen hambre", "Porque están enfermos"], exp: "Rascar es una necesidad natural. Un rascador estable, ubicado donde les gusta estar, los ayuda a dejar los muebles en paz." },
+            { cat: "Higiene", q: "¿Con qué frecuencia se suele bañar a un perro?", opts: ["Más o menos una vez al mes, según su pelo y actividad", "Todos los días", "Una vez al año", "Nunca"], exp: "Bañarlo de más le reseca la piel. La frecuencia depende del tipo de pelo y de cuánto se ensucie: tu peluquero te puede orientar." },
+            { cat: "Higiene", q: "¿Se puede usar shampoo de personas para bañar a un perro?", opts: ["No, su piel tiene otro pH y se irrita", "Sí, cualquiera sirve", "Sí, si es para bebés siempre", "Solo el anticaspa"], exp: "La piel del perro es distinta a la nuestra. Los productos veterinarios cuidan su piel y su pelaje." },
+            { cat: "Higiene", q: "¿Por qué es bueno cepillar seguido el pelo de una mascota?", opts: ["Saca el pelo muerto y evita nudos", "Porque les crece más rápido", "Para que cambie de color", "No sirve para nada"], exp: "El cepillado mantiene la piel sana, reduce el pelo en casa y es un buen momento para detectar bultos o parásitos." },
+            { cat: "Comportamiento", q: "¿Es normal que un perro coma pasto de vez en cuando?", opts: ["Sí, suele ser normal", "No, siempre indica una enfermedad grave", "Solo lo hacen los cachorros", "Significa que es vegetariano"], exp: "Muchos perros comen pasto sin problemas. Si lo hace muy seguido o vomita a menudo, conviene consultar." },
+            { cat: "Alimentación", q: "¿Qué tipo de chocolate es más peligroso para un perro?", opts: ["El amargo", "El blanco", "Todos igual", "El de taza"], exp: "Cuanto más cacao tiene, más teobromina: el chocolate amargo y el cacao en polvo son los más tóxicos." },
+            { cat: "Alimentación", q: "¿El café es peligroso para las mascotas?", opts: ["Sí, la cafeína es tóxica para ellas", "No, les da energía", "Solo si está caliente", "Solo para los gatos"], exp: "La cafeína acelera el corazón y el sistema nervioso de perros y gatos. Cuidado también con el té y las bebidas energéticas." },
+            { cat: "Alimentación", q: "¿Qué fruto seco es tóxico para los perros?", opts: ["La nuez de macadamia", "Ninguno", "El maní sin sal, en poca cantidad", "La castaña de cajú cocida"], exp: "Las nueces de macadamia pueden causar debilidad, temblores y fiebre en los perros." },
+            { cat: "Gatos", q: "¿Es bueno que un gato coma solo atún en lata?", opts: ["No, no cubre todo lo que necesita", "Sí, es su comida ideal", "Sí, si es al natural", "Sí, pero solo de noche"], exp: "Una dieta solo de atún genera carencias nutricionales. Puede ser un premio ocasional, no la base de su alimentación." },
+            { cat: "Gatos", q: "¿Los gatos pueden llevar una dieta vegetariana?", opts: ["No, son carnívoros estrictos", "Sí, sin problemas", "Sí, si comen mucha verdura", "Solo los gatos adultos"], exp: "Los gatos necesitan nutrientes que están en la carne, como la taurina. Sin ellos pueden enfermarse del corazón y la vista." },
+            { cat: "Gatos", q: "¿Qué nutriente, clave para el corazón y la vista, necesitan los gatos en su alimento?", opts: ["La taurina", "El azúcar", "La cafeína", "El gluten"], exp: "Los gatos no producen suficiente taurina y deben obtenerla de la dieta. Los alimentos para gatos ya la incluyen." },
+            { cat: "Gatos", q: "¿Puede un gato comer alimento para perros todos los días?", opts: ["No, no tiene lo que un gato necesita", "Sí, es lo mismo", "Sí, si es de buena marca", "Sí, pero mojado"], exp: "El alimento para perros tiene menos proteína y no garantiza la taurina que necesitan los gatos." },
+            { cat: "Nutrición", q: "¿Cómo podés saber si tu mascota tiene un peso saludable?", opts: ["Si se le palpan las costillas sin verlas y tiene cintura", "Si está redondita", "Si come todo lo que le das", "Solo con análisis de sangre"], exp: "El sobrepeso es muy común y trae problemas en las articulaciones y el corazón. En cada control te podemos decir su condición corporal." },
+            { cat: "Nutrición", q: "¿Cómo conviene cambiar el alimento de una mascota?", opts: ["De a poco, mezclando durante una semana o más", "De un día para el otro", "Dejándola en ayunas dos días", "Da igual cómo se haga"], exp: "Un cambio brusco puede darle vómitos o diarrea. Lo ideal es mezclar el alimento nuevo con el viejo durante 7 a 10 días." },
+            { cat: "Emergencias", q: "¿Qué hacés si tu mascota comió algo tóxico?", opts: ["Llamás al veterinario de inmediato", "Le das leche", "Le provocás el vómito por tu cuenta", "Esperás a ver qué pasa"], exp: "Algunas sustancias hacen más daño si se vomitan. El veterinario te va a indicar qué hacer según lo que haya comido." },
+            { cat: "Hogar seguro", q: "¿Cuál de estas plantas de interior es tóxica para perros y gatos?", opts: ["El potus", "El romero", "La albahaca", "El pasto gatero"], exp: "El potus irrita la boca y puede provocar babeo y vómitos. Mejor ubicarlo fuera del alcance de las mascotas." },
+            { cat: "Hogar seguro", q: "¿Cuál de estas plantas ornamentales es tóxica para las mascotas?", opts: ["La azalea", "El helecho de Boston", "La palmera areca", "La violeta africana"], exp: "La azalea puede causar vómitos, debilidad y problemas cardíacos. Antes de comprar una planta, fijate si es segura para mascotas." },
+            { cat: "Hogar seguro", q: "¿Se puede usar una pipeta antipulgas para perros en un gato?", opts: ["No, algunas son muy tóxicas para los gatos", "Sí, es lo mismo", "Sí, usando la mitad", "Sí, si el gato es grande"], exp: "Muchas pipetas para perros tienen permetrina, que en los gatos causa temblores y convulsiones. Usá siempre productos específicos." },
+            { cat: "Hogar seguro", q: "¿Por qué los venenos para ratas son tan peligrosos para las mascotas?", opts: ["Porque impiden que la sangre coagule", "Porque les dan sueño", "Porque tienen mal olor", "No son peligrosos para ellas"], exp: "La mayoría de los raticidas provoca hemorragias internas que aparecen días después. Si sospechás que comió, consultá enseguida." },
+            { cat: "Gatos", q: "¿Por qué no hay que dejar hilos o lanas al alcance de un gato sin supervisión?", opts: ["Porque si los traga pueden obstruirle el intestino", "Porque se enreda y se aburre", "Porque les da alergia", "No hay ningún problema"], exp: "Los hilos tragados pueden causar obstrucciones graves que necesitan cirugía. Jugá con él con varitas y guardalas después." },
+            { cat: "Comportamiento", q: "¿Qué ayuda a un perro con miedo a los fuegos artificiales?", opts: ["Darle un refugio tranquilo dentro de casa", "Retarlo para que se calme", "Atarlo afuera", "Llevarlo a ver los fuegos"], exp: "Un lugar cerrado, con ruido de fondo y sin castigos ayuda mucho. Si el miedo es intenso, consultá: hay tratamientos." },
+            { cat: "Comportamiento", q: "¿Qué significa que un gato te mire y parpadee despacio?", opts: ["Que se siente tranquilo y en confianza", "Que está enojado", "Que tiene sueño y nada más", "Que te va a atacar"], exp: "El parpadeo lento es una señal de calma y afecto. Podés responderle parpadeando despacio vos también." },
+            { cat: "Comportamiento", q: "Si un gato se tira panza arriba, ¿siempre quiere que se la toques?", opts: ["No, muestra confianza, pero a muchos no les gusta", "Sí, siempre", "Significa que tiene hambre", "Significa que está enfermo"], exp: "Mostrar la panza es una señal de confianza. Pero la panza es una zona sensible y muchos gatos reaccionan si se la tocan." },
+            { cat: "Comportamiento", q: "¿Cuál es la etapa clave para socializar a un cachorro?", opts: ["Sus primeros meses de vida", "Después de los 2 años", "Cuando ya es anciano", "No hace falta socializarlo"], exp: "Entre las 3 y las 14 semanas de vida aprende qué es seguro. Conocer personas, ruidos y lugares con buenas experiencias lo hace un adulto más equilibrado." },
+            { cat: "Comportamiento", q: "¿Cuál es la mejor forma de educar a un perro?", opts: ["Premiar las conductas que queremos", "Retarlo fuerte cuando se equivoca", "Ignorarlo siempre", "Dejarlo sin comer"], exp: "El refuerzo positivo (premios, caricias, juego) es más efectivo y fortalece el vínculo. El castigo genera miedo." },
+            { cat: "Comportamiento", q: "¿Qué le puede pasar a un perro que pasa demasiado tiempo solo y aburrido?", opts: ["Puede tener ansiedad, romper cosas o ladrar mucho", "Nada, les encanta estar solos", "Se vuelve más obediente", "Duerme mejor y no le afecta"], exp: "Los perros son sociables. Paseos, juegos y juguetes para pensar ayudan a que estén tranquilos cuando se quedan solos." },
+            { cat: "Comportamiento", q: "Además del ejercicio, ¿por qué son tan importantes los paseos para un perro?", opts: ["Porque olfatear le estimula la mente", "Porque así no come", "Solo sirven para ir al baño", "No son importantes"], exp: "Oler el mundo es como leer el diario para un perro: lo cansa mentalmente y lo relaja. Dejalo olfatear en los paseos." },
+            { cat: "Hogar seguro", q: "¿Por qué conviene pasear siempre con correa en la calle?", opts: ["Para prevenir accidentes y que no se pierda", "Porque si no se aburre", "Solo por las multas", "No hace falta si es obediente"], exp: "Hasta el perro más obediente puede asustarse y salir corriendo. La correa lo protege del tránsito y de peleas." },
+            { cat: "Prevención", q: "Además del microchip, ¿qué ayuda a que devuelvan rápido a una mascota perdida?", opts: ["Una chapita con nombre y teléfono", "Un moño de color", "Un corte de pelo especial", "Una foto en la heladera"], exp: "La chapita permite que cualquier vecino te contacte en el momento, sin necesidad de un lector de microchip." },
+            { cat: "Curiosidades", q: "¿Cuántos años puede vivir un gato bien cuidado?", opts: ["15 años o más", "3 años", "5 años", "8 años como máximo"], exp: "Con buena alimentación, vida de interior y controles, muchos gatos viven 15 años o más." },
+            { cat: "Prevención", q: "¿A partir de qué edad, en general, se considera 'senior' a un perro o gato?", opts: ["Alrededor de los 7 años, según tamaño y especie", "Al año", "A los 3 años", "A los 20 años"], exp: "A partir de esa edad conviene hacer controles más seguidos, porque muchas enfermedades se detectan temprano con análisis." },
+            { cat: "Prevención", q: "¿Por qué un cachorro necesita varias dosis de la misma vacuna?", opts: ["Porque las defensas de la madre interfieren con las primeras", "Porque se le olvidan", "Para que crezca más", "No las necesita"], exp: "Los anticuerpos que recibe de su madre van bajando de a poco. Los refuerzos aseguran que quede bien protegido." },
+            { cat: "Salud", q: "Si tu mascota no come y está decaída por más de un día, ¿qué conviene hacer?", opts: ["Consultar al veterinario", "Esperar una semana", "Darle remedios de personas", "Cambiarle el alimento varias veces"], exp: "La falta de apetito puede ser signo de muchas enfermedades. En los gatos, no comer por varios días puede dañar el hígado." },
+            { cat: "Salud", q: "¿La nariz seca significa que un perro tiene fiebre?", opts: ["No necesariamente", "Sí, siempre", "Sí, si es de noche", "Significa que tiene sed"], exp: "La nariz puede estar seca por muchos motivos. La única forma confiable de saber si tiene fiebre es tomarle la temperatura." },
+            { cat: "Salud", q: "¿Qué puede indicar el mal aliento persistente en una mascota?", opts: ["Sarro o problemas en los dientes y encías", "Que comió mucho", "Que está feliz", "Nada, es normal siempre"], exp: "El mal aliento suele ser el primer signo de enfermedad dental. Una limpieza a tiempo evita dolor y pérdida de dientes." },
+            { cat: "Salud", q: "Si un perro sacude la cabeza y se rasca las orejas seguido, ¿qué puede tener?", opts: ["Otitis (inflamación de oído)", "Hambre", "Ganas de jugar", "Frío en las orejas"], exp: "La otitis es muy común, sobre todo en perros de orejas caídas. Necesita tratamiento veterinario, no hisopos." },
+            { cat: "Emergencias", q: "¿Por qué es una urgencia que un gato macho intente orinar y no pueda?", opts: ["Porque puede tener la uretra obstruida", "Porque está marcando territorio", "Porque no le gusta la bandeja", "No es urgente"], exp: "Una obstrucción urinaria puede poner en riesgo su vida en pocas horas. Si lo ves haciendo fuerza sin resultado, consultá ya." },
+            { cat: "Salud", q: "¿Por qué un perro puede arrastrar la cola por el piso?", opts: ["Por molestias en las glándulas anales o parásitos", "Porque está contento", "Porque le gusta el piso frío", "Para limpiar la casa"], exp: "Ese 'trineo' suele indicar picazón en la zona. El veterinario puede vaciar las glándulas o tratar los parásitos." },
+            { cat: "Salud", q: "¿Qué puede indicar que una mascota tome mucha más agua de lo habitual?", opts: ["Diabetes o problemas en los riñones", "Que está muy sana", "Que el agua está rica", "Que tiene frío"], exp: "Tomar y orinar mucho más de lo normal es un signo de alerta. Un análisis de sangre y orina ayuda a encontrar la causa." },
+            { cat: "Gatos", q: "¿Por qué hay que prestar atención a los cambios chicos en la conducta de un gato?", opts: ["Porque suelen disimular el dolor", "Porque son caprichosos", "Porque cambian con la luna", "No hace falta prestarles atención"], exp: "Esconderse más, dejar de subir a lugares altos o cambiar sus hábitos puede ser la única señal de que algo le duele." },
+            { cat: "Curiosidades", q: "¿Qué es la membrana nictitante?", opts: ["Un tercer párpado que protege el ojo", "Una capa de la piel", "Un músculo de la cola", "Una parte del oído"], exp: "Perros y gatos tienen un tercer párpado en el ángulo interno del ojo. Si se ve mucho, puede indicar un problema." },
+            { cat: "Gatos", q: "¿Los gatos sienten el sabor dulce?", opts: ["No, no tienen receptores para el dulce", "Sí, les encanta", "Solo el de la miel", "Solo de cachorros"], exp: "Los gatos no pueden percibir el sabor dulce. Por eso lo que más les atrae es el sabor de la carne." },
+            { cat: "Curiosidades", q: "¿Cuándo cambian los dientes de leche los cachorros de perro?", opts: ["Entre los 4 y los 6 meses", "Al nacer", "A los 3 años", "Nunca los cambian"], exp: "En esa etapa les pican las encías y muerden todo: darles juguetes para morder les ayuda mucho." },
+            { cat: "Curiosidades", q: "¿Cuántos dedos tiene normalmente un gato en cada pata delantera?", opts: ["5", "4", "3", "6"], exp: "Tienen 5 dedos adelante y 4 atrás. Algunos gatos 'polidáctilos' tienen dedos de más." },
+            { cat: "Gatos", q: "¿Por qué a muchos gatos les encanta la hierba gatera (catnip)?", opts: ["Tiene una sustancia que los estimula y es inofensiva", "Porque es muy nutritiva", "Porque les quita el hambre", "Porque es dulce"], exp: "La nepetalactona provoca unos minutos de euforia. No es adictiva ni dañina, aunque no todos los gatos reaccionan." },
+            { cat: "Cuidados básicos", q: "¿Cómo conviene llevar a un gato al veterinario?", opts: ["En una transportadora cerrada, a la que se acostumbre de antes", "En brazos", "Suelto en el auto", "Con correa como un perro"], exp: "Dejar la transportadora abierta en casa, con una mantita, hace que la vea como un lugar seguro y no solo como 'el viaje al veterinario'." },
+            { cat: "Emergencias", q: "Si tu mascota se corta una pata y sangra, ¿qué hacés primero?", opts: ["Presionás con una gasa limpia y vas al veterinario", "Le ponés alcohol puro", "Lo dejás que se lama", "Esperás que pare solo"], exp: "La presión firme frena el sangrado. El alcohol duele y daña el tejido: dejá la limpieza para el veterinario." },
+            { cat: "Otras mascotas", q: "¿Qué debe ser la base de la alimentación de un conejo?", opts: ["El heno", "La zanahoria", "El pan", "El alimento para gatos"], exp: "El heno aporta la fibra que necesita su digestión y desgasta sus dientes, que crecen toda la vida. La zanahoria es solo un premio." },
+            { cat: "Otras mascotas", q: "¿En qué momento del día son más activos los hámsters?", opts: ["De noche", "Al mediodía", "A la mañana temprano", "Todo el día por igual"], exp: "Son animales nocturnos: despertarlos de día los estresa. Lo mejor es interactuar con ellos a la tardecita." },
+            { cat: "Otras mascotas", q: "¿Qué necesita una tortuga de agua para estar sana?", opts: ["Luz solar o UVB y agua limpia", "Vivir en una pecera sin agua", "Comer solo lechuga", "Estar siempre a oscuras"], exp: "La luz UVB le permite fijar el calcio y mantener sano el caparazón. El agua limpia previene infecciones." },
+            { cat: "Otras mascotas", q: "¿Qué alimento es muy tóxico para loros y otras aves?", opts: ["La palta", "La manzana sin semillas", "La zanahoria", "El mijo"], exp: "La palta contiene persina, que en las aves puede causar problemas cardíacos graves." },
+            { cat: "Otras mascotas", q: "¿Qué vitamina necesitan los cobayos en su dieta porque no la producen?", opts: ["La vitamina C", "La vitamina D", "La vitamina B12", "Ninguna"], exp: "Igual que nosotros, los cobayos no fabrican vitamina C: la obtienen de verduras frescas como el morrón o de alimento específico." },
+            { cat: "Higiene", q: "¿Qué conviene hacer después de bañar a un perro?", opts: ["Secarlo bien, sobre todo orejas y pliegues", "Dejarlo mojado al sol", "Sacarlo a pasear enseguida", "Nada"], exp: "La humedad en orejas y pliegues favorece hongos y otitis. Un buen secado es parte del baño." },
+            { cat: "Cuidados básicos", q: "¿Qué es importante pensar antes de adoptar una mascota?", opts: ["Que es un compromiso de muchos años", "Nada, es como un juguete", "Solo el color que te gusta", "Que se cuida sola"], exp: "Una mascota puede vivir 15 años o más y necesita tiempo, cuidados y gastos veterinarios. Adoptar es un compromiso hermoso y largo." },
+            { cat: "Gatos", q: "¿Qué tipo de collar es más seguro para un gato?", opts: ["Uno con cierre de seguridad que se abre si se engancha", "Uno de cadena", "Uno bien ajustado y sin cierre", "Uno con cascabeles grandes"], exp: "Los gatos trepan y se meten en todos lados. El cierre de seguridad evita que se ahorquen si el collar se engancha." },
+            { cat: "Higiene", q: "En verano, ¿conviene rapar al ras a un perro de pelo doble (como un husky)?", opts: ["No, su pelo lo protege del sol y del calor", "Sí, siempre", "Sí, así no se ensucia", "Da lo mismo"], exp: "El subpelo funciona como aislante. Raparlo lo expone a quemaduras y a veces el pelo no vuelve a crecer bien. Mejor cepillarlo seguido." }
+          ];
+
+          var s = { round: [], roundNum: 1, idx: 0, score: 0, correct: 0 };
+          var KEYS = ["A", "B", "C", "D"];
+
+          function newDeck() {
+            return { order: shuffle(QUESTIONS.map(function (_, i) { return i; })), pos: 0 };
+          }
+
+          // Devuelve la próxima tanda. El mazo se guarda en este navegador;
+          // si no hay almacenamiento disponible, cada tanda sale de un mazo
+          // nuevo (sigue siendo aleatoria, solo que puede repetir).
+          function nextRound() {
+            var deck = null;
+            try { deck = JSON.parse(localStorage.getItem(DECK_KEY)); } catch (e) {}
+            var valid = deck && Array.isArray(deck.order) && deck.order.length === QUESTIONS.length &&
+              typeof deck.pos === "number" && deck.pos + PER_ROUND <= deck.order.length;
+            if (!valid) deck = newDeck();
+
+            s.roundNum = deck.pos / PER_ROUND + 1;
+            var round = deck.order.slice(deck.pos, deck.pos + PER_ROUND).map(function (i) { return QUESTIONS[i]; });
+            deck.pos += PER_ROUND;
+            try { localStorage.setItem(DECK_KEY, JSON.stringify(deck)); } catch (e) {}
+            return round;
+          }
+
+          function start() {
+            s.round = nextRound();
+            s.idx = 0;
+            s.score = 0;
+            s.correct = 0;
+            load();
+          }
+
+          function load() {
+            var item = s.round[s.idx];
+            $("trivia-progress").textContent = "Tanda " + s.roundNum + " de " + QUESTIONS.length / PER_ROUND +
+              " · Pregunta " + (s.idx + 1) + " de " + PER_ROUND;
+            $("trivia-meter").style.width = (s.idx / PER_ROUND) * 100 + "%";
+            $("trivia-score").textContent = s.score + " pts";
+            $("trivia-cat").textContent = item.cat;
+            $("trivia-q").textContent = item.q;
+            $("trivia-exp").hidden = true;
+            $("trivia-next").hidden = true;
+
+            var opts = shuffle(item.opts.map(function (text, i) { return { text: text, right: i === 0 }; }));
+            var wrap = $("trivia-opts");
+            wrap.innerHTML = "";
+            opts.forEach(function (o, i) {
+              var btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "trivia-opt";
+              btn.dataset.right = o.right ? "1" : "";
+              var key = document.createElement("span");
+              key.className = "trivia-opt-key";
+              key.textContent = KEYS[i];
+              var label = document.createElement("span");
+              label.textContent = o.text;
+              btn.append(key, label);
+              btn.addEventListener("click", function () { answer(btn); });
+              wrap.appendChild(btn);
+            });
+          }
+
+          function answer(btn) {
+            var item = s.round[s.idx];
+            var ok = !!btn.dataset.right;
+            $("trivia-opts").querySelectorAll(".trivia-opt").forEach(function (b) {
+              b.disabled = true;
+              if (b.dataset.right) {
+                b.classList.add("is-right");
+                b.querySelector(".trivia-opt-key").textContent = "✓";
+              } else if (b === btn) {
+                b.classList.add("is-wrong");
+                b.querySelector(".trivia-opt-key").textContent = "✕";
+              } else {
+                b.classList.add("is-dim");
+              }
+            });
+
+            if (ok) {
+              s.score += PTS;
+              s.correct += 1;
+              sfx.right();
+            } else {
+              sfx.wrong();
+            }
+            $("trivia-score").textContent = s.score + " pts";
+            $("trivia-meter").style.width = ((s.idx + 1) / PER_ROUND) * 100 + "%";
+            $("trivia-verdict").textContent = ok ? "¡Correcto! " : "¿Sabías que…? ";
+            $("trivia-exp-text").textContent = item.exp;
+            $("trivia-exp").hidden = false;
+            var next = $("trivia-next");
+            next.textContent = s.idx + 1 < PER_ROUND ? "Siguiente →" : "Ver resultado";
+            next.hidden = false;
+            next.focus({ preventScroll: true });
+            next.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          }
+
+          $("trivia-next").addEventListener("click", function () {
+            s.idx += 1;
+            if (s.idx < PER_ROUND) {
+              load();
+              document.querySelector("main").scrollTop = 0;
+              return;
+            }
+            var msg = "Tanda " + s.roundNum + ": acertaste " + s.correct + " de " + PER_ROUND + " preguntas.";
+            if (s.correct === PER_ROUND) msg += " ¡Sabés un montón!";
+            else if (s.correct >= PER_ROUND / 2) msg += " ¡Muy bien!";
+            else msg += " ¡Ahora ya sabés un poco más!";
+            showResult({ key: "trivia", icon: "🎓", title: "¡Trivia completa!", msg: msg, score: s.score, retry: start, retryLabel: "Siguiente tanda →" });
+          });
+
+          games.trivia = { enter: start };
+        })();
+
+        /* =====================================================
+           JUEGO 3 — ATRAPÁ EL PREMIO
+           ===================================================== */
+        (function () {
+          var DURATION = 30;
+          var GOOD = ["🦴", "🥩", "🐟", "🥕"];
+          var BAD = ["🍫", "🍇", "🧅", "🧦"];
+
+          var grid = $("catch-grid");
+          var cells = [];
+          for (var i = 0; i < 9; i++) {
+            var c = document.createElement("button");
+            c.type = "button";
+            c.className = "catch-cell";
+            c.setAttribute("aria-label", "Pozo " + (i + 1));
+            grid.appendChild(c);
+            cells.push({ el: c, item: null, hideTimer: 0 });
+          }
+
+          var s = { playing: false, score: 0, level: 1, timeLeft: DURATION, tick: 0, spawnTimer: 0 };
+
+          function render() {
+            $("premios-score").textContent = s.score;
+            $("premios-level").textContent = s.level;
+            var t = $("premios-time");
+            t.textContent = s.timeLeft + "s";
+            t.classList.toggle("is-urgent", s.playing && s.timeLeft <= 5);
+          }
+
+          function clearCell(cell, cls) {
+            clearTimeout(cell.hideTimer);
+            var span = cell.el.firstChild;
+            cell.item = null;
+            if (!span) return;
+            if (cls) {
+              span.classList.add(cls);
+              setTimeout(function () { if (span.parentNode) span.remove(); }, 200);
+            } else {
+              span.remove();
+            }
+          }
+
+          function spawn() {
+            if (!s.playing) return;
+            var free = cells.filter(function (c) { return !c.item && !c.el.firstChild; });
+            // Desde el nivel 4 pueden aparecer dos a la vez.
+            var count = s.level >= 4 && Math.random() < 0.45 ? 2 : 1;
+            for (var n = 0; n < count && free.length; n++) {
+              var cell = free.splice(Math.floor(Math.random() * free.length), 1)[0];
+              var bad = Math.random() < 0.33 + s.level * 0.015;
+              var icon = pick(bad ? BAD : GOOD);
+              var span = document.createElement("span");
+              span.className = "catch-item";
+              span.textContent = icon;
+              cell.el.appendChild(span);
+              cell.item = { bad: bad };
+              var life = Math.max(650, 1500 - s.level * 95);
+              cell.hideTimer = setTimeout(clearCell.bind(null, cell, "is-leaving"), life);
+            }
+            var delay = Math.max(380, 900 - s.level * 60);
+            s.spawnTimer = setTimeout(spawn, delay * rand(0.8, 1.2));
+          }
+
+          function hit(cell) {
+            if (!s.playing || !cell.item) return;
+            var bad = cell.item.bad;
+            var r = cell.el.getBoundingClientRect();
+            var st = grid.parentNode.getBoundingClientRect();
+            var x = r.left - st.left + r.width / 2;
+            var y = r.top - st.top + r.height * 0.2;
+            if (bad) {
+              s.score = Math.max(0, s.score - 15);
+              sfx.wrong();
+              floatText(grid.parentNode, x, y, "−15", "is-bad");
+              if (navigator.vibrate) navigator.vibrate(60);
+            } else {
+              s.score += 10;
+              sfx.pop();
+              floatText(grid.parentNode, x, y, "+10");
+            }
+            clearCell(cell, "is-hit");
+
+            if (s.score >= s.level * 60 && s.level < 10) {
+              s.level += 1;
+              floatText(grid.parentNode, st.width / 2, st.height * 0.12, "¡Nivel " + s.level + "!", "is-big");
+              sfx.gold();
+            }
+            render();
+          }
+
+          cells.forEach(function (cell) {
+            cell.el.addEventListener("pointerdown", function (e) {
+              e.preventDefault();
+              hit(cell);
+            });
+          });
+
+          function start() {
+            stop();
+            s.playing = true;
+            s.score = 0;
+            s.level = 1;
+            s.timeLeft = DURATION;
+            render();
+            $("premios-start").hidden = true;
+            s.tick = setInterval(function () {
+              s.timeLeft -= 1;
+              render();
+              if (s.timeLeft <= 0) finish();
+            }, 1000);
+            s.spawnTimer = setTimeout(spawn, 400);
+          }
+
+          function stop() {
+            s.playing = false;
+            clearInterval(s.tick);
+            clearTimeout(s.spawnTimer);
+            cells.forEach(function (c) { clearCell(c); });
+          }
+
+          function finish() {
+            stop();
+            render();
+            showResult({
+              key: "premios",
+              icon: "🦴",
+              title: "¡Se terminó el tiempo!",
+              msg: "Sumaste " + s.score + " puntos y llegaste al nivel " + s.level + ".",
+              score: s.score,
+              retry: start
+            });
+          }
+
+          function enter() {
+            stop();
+            s.score = 0;
+            s.level = 1;
+            s.timeLeft = DURATION;
+            render();
+            $("premios-start").hidden = false;
+          }
+
+          $("premios-play").addEventListener("click", start);
+
+          // Al cambiar de pestaña se corta la partida en vez de seguir
+          // contando sin que nadie juegue.
+          document.addEventListener("visibilitychange", function () {
+            if (document.hidden && s.playing) enter();
+          });
+
+          games.premios = { enter: enter, stop: stop };
+        })();
+
+        window.addEventListener("hashchange", route);
+        route();
+      })();
+    </script>
+  </body>
+</html>
