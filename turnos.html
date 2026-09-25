@@ -118,60 +118,79 @@
         outline-offset: 3px;
       }
 
-      /* Acceso a los juegos de la sala de espera: píldora secundaria
-         (blanca, con borde) para no competir con los botones naranjas de
-         reserva, que son la acción principal de esta página. */
+      /* Acceso a los juegos de la sala de espera: tarjeta con borde
+         naranja para que se distinga sin robarle protagonismo a los botones
+         de reserva (que van rellenos de naranja). */
       .mv-juegos-link {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        width: fit-content;
-        max-width: 100%;
-        margin: -1rem auto 2rem;
-        padding: 0.55rem 1.1rem 0.55rem 0.55rem;
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        border-radius: 999px;
-        background: #ffffff;
+        gap: 0.9rem;
+        width: 100%;
+        max-width: 34rem;
+        margin: -0.75rem auto 2.25rem;
+        padding: 0.8rem 0.9rem;
+        border: 2px solid var(--mv-accent);
+        border-radius: 1.25rem;
+        background: #fff8ef;
         color: var(--mv-ink);
         text-decoration: none;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        box-shadow: 0 6px 18px rgba(227, 160, 82, 0.2);
+        transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
       }
 
       .mv-juegos-emoji {
         display: grid;
         place-items: center;
         flex-shrink: 0;
-        width: 2.2rem;
-        height: 2.2rem;
-        border-radius: 50%;
-        background: #f3e3cc;
-        font-size: 1.15rem;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.9rem;
+        background: var(--mv-accent);
+        font-size: 1.6rem;
       }
 
       .mv-juegos-text {
-        font-size: 0.9rem;
-        line-height: 1.25;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        flex: 1;
+        min-width: 0;
       }
 
-      .mv-juegos-text strong {
+      .mv-juegos-title {
         font-family: var(--font-heading);
         font-weight: 500;
+        font-size: 1.1rem;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
       }
 
-      .mv-juegos-link::after {
-        content: "→";
+      .mv-juegos-sub {
+        font-size: 0.85rem;
+        line-height: 1.3;
+        color: #6b6b6b;
+      }
+
+      .mv-juegos-arrow {
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: 50%;
+        background: var(--mv-accent);
+        font-size: 1.05rem;
         transition: transform 0.2s ease;
       }
 
       @media (hover: hover) {
         .mv-juegos-link:hover {
           transform: translateY(-2px);
-          border-color: var(--mv-accent);
-          box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+          background: #fff3e3;
+          box-shadow: 0 12px 26px rgba(227, 160, 82, 0.32);
         }
 
-        .mv-juegos-link:hover::after {
+        .mv-juegos-link:hover .mv-juegos-arrow {
           transform: translateX(3px);
         }
       }
@@ -186,7 +205,9 @@
       }
 
       @media (min-width: 768px) {
-        .mv-juegos-link { margin: -1.75rem auto 3rem; }
+        .mv-juegos-link { margin: -1.5rem auto 3rem; padding: 1rem 1.1rem; }
+        .mv-juegos-title { font-size: 1.2rem; }
+        .mv-juegos-sub { font-size: 0.9rem; }
       }
 
       .mv-section {
@@ -382,8 +403,12 @@
         <h1 class="mv-heading">Elegí tu turno</h1>
         <p class="mv-subheading">Estudios médicos o baño y peluquería — vos elegís.</p>
         <a class="mv-juegos-link" href="/mivet/juegos.html">
-          <span class="mv-juegos-emoji" aria-hidden="true">🐾</span>
-          <span class="mv-juegos-text">¿Estás en la sala de espera? <strong>Jugá mientras tanto</strong></span>
+          <span class="mv-juegos-emoji" aria-hidden="true">🎮</span>
+          <span class="mv-juegos-text">
+            <span class="mv-juegos-title">Juegos para la sala de espera</span>
+            <span class="mv-juegos-sub">Trivia, baño de burbujas y más, gratis mientras esperás</span>
+          </span>
+          <span class="mv-juegos-arrow" aria-hidden="true">→</span>
         </a>
 
         <div class="mv-turnos-grid" id="mv-nivel-principal">
