@@ -5,8 +5,8 @@
 
 const BASE = '/mivet/assets/equipo/'
 
-// TODO: reemplazar por los nombres reales (orden: de izquierda a derecha en la foto).
-const NOMBRES = ['Nombre 1', 'Nombre 2', 'Nombre 3', 'Nombre 4']
+// Nombres en el orden: de izquierda a derecha en la foto).
+const NOMBRES = ['Sole', 'Rocío', 'Majo', 'Sabri']
 
 // Posiciones en % de la imagen: x/y/w/h = caja del recorte, hx/hy = punta de la cabeza.
 const VARIANTES = {
