@@ -13,19 +13,19 @@ const VARIANTES = {
   desktop: {
     w: 2000, h: 1116,
     personas: [
-      { x: 18.9, y: 35.932, w: 19.0, h: 64.068, hx: 29.0, hy: 36.29 },
-      { x: 36.25, y: 36.918, w: 16.95, h: 63.082, hx: 41.95, hy: 37.28 },
-      { x: 49.45, y: 33.423, w: 17.0, h: 66.577, hx: 56.55, hy: 33.78 },
-      { x: 64.15, y: 30.108, w: 19.1, h: 69.892, hx: 71.25, hy: 30.47 },
+      { x: 18.9, y: 35.753, w: 19.05, h: 64.247, hx: 29.0, hy: 36.11 },
+      { x: 36.05, y: 36.828, w: 17.1, h: 63.172, hx: 41.95, hy: 37.19 },
+      { x: 49.45, y: 33.333, w: 17.1, h: 66.667, hx: 56.5, hy: 33.69 },
+      { x: 63.9, y: 29.928, w: 19.4, h: 70.072, hx: 71.05, hy: 30.29 },
     ],
   },
   mobile: {
     w: 1116, h: 2000,
     personas: [
-      { x: 0.0, y: 35.35, w: 29.391, h: 64.65, hx: 13.08, hy: 35.55 },
-      { x: 22.76, y: 35.95, w: 33.602, h: 64.05, hx: 35.84, hy: 36.15 },
-      { x: 47.939, y: 33.8, w: 32.885, h: 66.2, hx: 60.13, hy: 34.0 },
-      { x: 75.269, y: 31.85, w: 24.731, h: 68.15, hx: 86.38, hy: 32.05 },
+      { x: 0.0, y: 35.3, w: 29.57, h: 64.7, hx: 12.9, hy: 35.5 },
+      { x: 22.76, y: 35.9, w: 33.602, h: 64.1, hx: 35.93, hy: 36.1 },
+      { x: 47.939, y: 33.75, w: 32.527, h: 66.25, hx: 60.22, hy: 33.95 },
+      { x: 75.179, y: 31.8, w: 24.821, h: 68.2, hx: 86.29, hy: 32.0 },
     ],
   },
 }
@@ -51,7 +51,9 @@ const CSS = `
 .eq-dim{position:absolute;inset:0;background:rgba(18,8,16,.6);opacity:0;transition:opacity .35s ease;pointer-events:none}
 .eq-root.eq-activa .eq-dim{opacity:1}
 .eq-figura,.eq-halo{opacity:0;transition:opacity .35s ease;will-change:opacity}
-.eq-halo{filter:drop-shadow(0 0 3px rgba(255,170,215,.95)) drop-shadow(0 0 10px rgba(255,92,170,.9)) drop-shadow(0 0 26px rgba(255,64,160,.65))}
+/* El blur inicial difumina el borde de la silueta: sin él, el primer resplandor dibuja un filo
+   claro y de grosor irregular pegado al cuerpo. */
+.eq-halo{filter:blur(5px) drop-shadow(0 0 6px rgba(255,150,205,.9)) drop-shadow(0 0 14px rgba(255,92,170,.9)) drop-shadow(0 0 26px rgba(255,64,160,.65))}
 .eq-figura.eq-on{opacity:1}
 .eq-halo.eq-on{opacity:1;animation:eq-latido 2.4s ease-in-out .35s infinite}
 @keyframes eq-latido{50%{opacity:.7}}
@@ -116,11 +118,12 @@ function construir(root, clave, alEstado) {
   const nombres = []
   const imagenes = [base]
   v.personas.forEach((p, i) => {
-    // Dos capas por persona: el halo (con el brillo, fijo) y la figura nítida encima.
+    // Dos capas por persona: el halo (silueta suavizada, de color liso, con el brillo fijo) y la
+    // figura nítida encima (recorte exacto).
     for (const clase of ['eq-halo', 'eq-figura']) {
       const f = document.createElement('img')
       f.className = clase
-      f.src = `${BASE}equipo-${clave}-${i + 1}.webp`
+      f.src = `${BASE}equipo-${clave}-${i + 1}${clase === 'eq-halo' ? '-halo' : ''}.webp`
       f.alt = ''
       Object.assign(f.style, { left: `${p.x}%`, top: `${p.y}%`, width: `${p.w}%`, height: `${p.h}%` })
       stage.appendChild(f)
