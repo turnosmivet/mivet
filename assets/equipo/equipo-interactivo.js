@@ -108,6 +108,8 @@ function construir(root, clave, alEstado) {
   base.src = `${BASE}equipo-${clave}.webp`
   base.alt = `El equipo de MiVet: ${NOMBRES.join(', ')}, frente al cartel de neón de la clínica.`
   base.decoding = 'async'
+  // La foto completa es lo primero que se ve: va antes que los recortes del efecto.
+  base.fetchPriority = 'high'
   stage.appendChild(base)
 
   const dim = document.createElement('div')
@@ -125,6 +127,7 @@ function construir(root, clave, alEstado) {
       f.className = clase
       f.src = `${BASE}equipo-${clave}-${i + 1}${clase === 'eq-halo' ? '-halo' : ''}.webp`
       f.alt = ''
+      f.fetchPriority = 'low'
       Object.assign(f.style, { left: `${p.x}%`, top: `${p.y}%`, width: `${p.w}%`, height: `${p.h}%` })
       stage.appendChild(f)
       figuras.push(f)
