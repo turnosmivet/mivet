@@ -5,7 +5,7 @@
 
 const BASE = '/mivet/assets/equipo/'
 
-// Nombres en el orden: de izquierda a derecha en la foto).
+// Nombres en orden de izquierda a derecha en la foto.
 const NOMBRES = ['Sole', 'Rocío', 'Majo', 'Sabri']
 
 // Posiciones en % de la imagen: x/y/w/h = caja del recorte, hx/hy = punta de la cabeza.
