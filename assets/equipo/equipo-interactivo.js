@@ -50,10 +50,11 @@ const CSS = `
 .eq-base{left:0;top:0;width:100%;height:100%}
 .eq-dim{position:absolute;inset:0;background:rgba(18,8,16,.6);opacity:0;transition:opacity .35s ease;pointer-events:none}
 .eq-root.eq-activa .eq-dim{opacity:1}
-.eq-figura{opacity:0;transition:opacity .35s ease,filter .35s ease;filter:drop-shadow(0 0 0 rgba(255,92,170,0))}
-.eq-figura.eq-on{opacity:1;filter:drop-shadow(0 0 3px rgba(255,170,215,.95)) drop-shadow(0 0 10px rgba(255,92,170,.9)) drop-shadow(0 0 26px rgba(255,64,160,.65));
-  animation:eq-latido 2.4s ease-in-out .35s infinite}
-@keyframes eq-latido{50%{filter:drop-shadow(0 0 4px rgba(255,170,215,1)) drop-shadow(0 0 14px rgba(255,92,170,.95)) drop-shadow(0 0 34px rgba(255,64,160,.75))}}
+.eq-figura,.eq-halo{opacity:0;transition:opacity .35s ease;will-change:opacity}
+.eq-halo{filter:drop-shadow(0 0 3px rgba(255,170,215,.95)) drop-shadow(0 0 10px rgba(255,92,170,.9)) drop-shadow(0 0 26px rgba(255,64,160,.65))}
+.eq-figura.eq-on{opacity:1}
+.eq-halo.eq-on{opacity:1;animation:eq-latido 2.4s ease-in-out .35s infinite}
+@keyframes eq-latido{50%{opacity:.7}}
 .eq-nombre{position:absolute;transform:translate(-50%,calc(-100% - 6px)) scale(.9);opacity:0;
   transition:opacity .3s ease,transform .3s ease;pointer-events:none;white-space:nowrap;
   font-family:"HelveticaNowDisplay-Medium",system-ui,sans-serif;font-size:clamp(15px,1.6vw,24px);color:#fff;
@@ -63,10 +64,12 @@ const CSS = `
 .eq-pista{position:absolute;left:50%;top:14px;transform:translateX(-50%);
   font-family:"HelveticaNowDisplayW01-Rg",system-ui,sans-serif;font-size:14px;color:#fff;white-space:nowrap;
   background:rgba(0,0,0,.45);padding:.45em 1em;border-radius:999px;pointer-events:none;transition:opacity .4s ease}
+.eq-pista{opacity:0}
+.eq-root.eq-lista .eq-pista{opacity:1}
 .eq-root.eq-usada .eq-pista{opacity:0}
 .eq-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .eq-sr:focus-visible{outline:none}
-@media (prefers-reduced-motion:reduce){.eq-figura,.eq-nombre,.eq-dim{transition:none}.eq-figura.eq-on{animation:none}}
+@media (prefers-reduced-motion:reduce){.eq-figura,.eq-halo,.eq-nombre,.eq-dim{transition:none}.eq-halo.eq-on{animation:none}}
 `
 
 function inyectarCss() {
@@ -111,15 +114,19 @@ function construir(root, clave, alEstado) {
 
   const figuras = []
   const nombres = []
+  const imagenes = [base]
   v.personas.forEach((p, i) => {
-    const f = document.createElement('img')
-    f.className = 'eq-figura'
-    f.src = `${BASE}equipo-${clave}-${i + 1}.webp`
-    f.alt = ''
-    f.decoding = 'async'
-    Object.assign(f.style, { left: `${p.x}%`, top: `${p.y}%`, width: `${p.w}%`, height: `${p.h}%` })
-    stage.appendChild(f)
-    figuras.push(f)
+    // Dos capas por persona: el halo (con el brillo, fijo) y la figura nítida encima.
+    for (const clase of ['eq-halo', 'eq-figura']) {
+      const f = document.createElement('img')
+      f.className = clase
+      f.src = `${BASE}equipo-${clave}-${i + 1}.webp`
+      f.alt = ''
+      Object.assign(f.style, { left: `${p.x}%`, top: `${p.y}%`, width: `${p.w}%`, height: `${p.h}%` })
+      stage.appendChild(f)
+      figuras.push(f)
+      imagenes.push(f)
+    }
 
     const n = document.createElement('div')
     n.className = 'eq-nombre'
@@ -148,7 +155,10 @@ function construir(root, clave, alEstado) {
   fondo.setAttribute('aria-hidden', 'true')
   root.appendChild(fondo)
   root.appendChild(stage)
-  return { v, stage, figuras, nombres }
+  // Lista cuando todas las imágenes están decodificadas: así el efecto nunca se dibuja
+  // sobre un recorte a medio cargar (se veía un rectángulo antes de la silueta).
+  const lista = Promise.all(imagenes.map((im) => im.decode().catch(() => {})))
+  return { v, stage, figuras, nombres, lista }
 }
 
 export function mount(contenedor) {
@@ -168,11 +178,13 @@ export function mount(contenedor) {
   let mapa = null
   let activa = -1
   let token = 0
+  let listo = false
+  let soltar = 0
 
   function setActiva(i) {
-    if (!vista || i === activa) return
+    if (!vista || !listo || i === activa) return
     activa = i
-    vista.figuras.forEach((f, k) => f.classList.toggle('eq-on', k === i))
+    vista.figuras.forEach((f, k) => f.classList.toggle('eq-on', k >> 1 === i))
     vista.nombres.forEach((n, k) => n.classList.toggle('eq-on', k === i))
     root.classList.toggle('eq-activa', i >= 0)
     if (i >= 0) {
@@ -230,11 +242,16 @@ export function mount(contenedor) {
     activa = -1
     root.replaceChildren()
     mapa = null
+    listo = false
+    root.classList.remove('eq-lista', 'eq-activa')
     vista = construir(root, clave, setActiva)
     root.appendChild(pista)
     ajustar()
-    const m = await cargarMapa(`${BASE}equipo-${clave}-mapa.png`)
-    if (mio === token) mapa = m
+    const [m] = await Promise.all([cargarMapa(`${BASE}equipo-${clave}-mapa.png`), vista.lista])
+    if (mio !== token) return
+    mapa = m
+    listo = true
+    root.classList.add('eq-lista')
   }
 
   // Mouse: resalta mientras el cursor está encima.
@@ -244,7 +261,9 @@ export function mount(contenedor) {
     if (e.pointerType === 'mouse') {
       const i = personaEn(e.clientX, e.clientY)
       vista.stage.classList.toggle('eq-sobre', i >= 0)
-      setActiva(i)
+      clearTimeout(soltar)
+      if (i >= 0) setActiva(i)
+      else soltar = setTimeout(() => setActiva(-1), 120)
     } else if (arrastrando) {
       const i = personaEn(e.clientX, e.clientY)
       if (i >= 0) setActiva(i)
@@ -258,7 +277,10 @@ export function mount(contenedor) {
   }
   function onUp() { arrastrando = false }
   function onLeave(e) {
-    if (e.pointerType === 'mouse') setActiva(-1)
+    if (e.pointerType === 'mouse') {
+      clearTimeout(soltar)
+      setActiva(-1)
+    }
     arrastrando = false
   }
 
@@ -275,6 +297,7 @@ export function mount(contenedor) {
 
   return () => {
     token++
+    clearTimeout(soltar)
     ro.disconnect()
     mq.removeEventListener('change', montarVista)
     root.remove()
