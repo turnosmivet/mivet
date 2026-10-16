@@ -1,0 +1,4 @@
+# Cloudflare Pages: los archivos compilados llevan un hash en el nombre (index-XXXX.js/css),
+# así que nunca cambian: se pueden guardar en caché por un año.
+/assets/index-*
+  Cache-Control: public, max-age=31536000, immutable
