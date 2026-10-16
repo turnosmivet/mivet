@@ -3,7 +3,7 @@
 // Las siluetas son recortes PNG/WebP con transparencia; para saber qué persona está
 // bajo el puntero se usa un "mapa" de baja resolución (cada píxel = índice de persona).
 
-const BASE = '/mivet/assets/equipo/'
+const BASE = '/assets/equipo/'
 
 // Nombres en orden de izquierda a derecha en la foto.
 const NOMBRES = ['Sole', 'Rocío', 'Majo', 'Sabri']
